@@ -28,7 +28,7 @@ export default function CountdownTimer({ seconds, setSeconds, isActive }: Props)
   }, [seconds, isActive]); // 依賴陣列 當秒數變更或 開始專注後 就重新執行一次這個 useEffect
 
   return (
-    <div className="text-4xl font-mono">
+    <div className="text-4xl font-mono text-amber-50">
       {/* 當秒數小於 10 ， 在前面加一個 0 ， 三元運算子 */}
       {minutes}:{remainSeconds < 10 ? `0${remainSeconds}` : remainSeconds}
     </div>
