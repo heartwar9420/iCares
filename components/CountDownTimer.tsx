@@ -1,21 +1,46 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 interface Props {
   seconds: number;
   setSeconds: React.Dispatch<React.SetStateAction<number>>;
   // 等同於 setSeconds: (val: number | ((prev: number) => number)) => void;
   isActive: boolean;
+  mode: string;
+  setMode: React.Dispatch<React.SetStateAction<string>>;
+  startNewTimer: (targetMode?: string) => Promise<void>;
 }
 
-export default function CountdownTimer({ seconds, setSeconds, isActive }: Props) {
+export default function CountDownTimer({
+  seconds,
+  setSeconds,
+  isActive,
+  mode,
+  setMode,
+  startNewTimer,
+}: Props) {
   // Math.floor = 把小數點後面的數字全部切掉
   const minutes = Math.floor(seconds / 60);
   // % = 取餘數
   const remainSeconds = seconds % 60;
+  const modeText = {
+    work: '專注中',
+    rest: '休息中',
+    longRest: '長休息',
+  };
 
   useEffect(() => {
-    if (!isActive || seconds <= 0) return;
+    if (isActive && seconds === 0) {
+      const nextMode = mode === 'work' ? 'rest' : 'work';
+      // 更新 React 的狀態 (為了畫面顯示)
+      setMode(nextMode);
 
+      // 關鍵！直接告訴後端我們要拿 nextMode 的時間，不要等 React 更新
+      startNewTimer(nextMode);
+      return;
+    }
+    if (!isActive) {
+      return;
+    }
     // setInterval((),1000) = 每隔 1000 毫秒執行一次前面的動作
     const timerId = setInterval(() => {
       // setSeconds((先去看一下目前的數字) => 把目前的數字 -1 再放回來)
@@ -28,9 +53,14 @@ export default function CountdownTimer({ seconds, setSeconds, isActive }: Props)
   }, [seconds, isActive]); // 依賴陣列 當秒數變更或 開始專注後 就重新執行一次這個 useEffect
 
   return (
-    <div className="text-4xl font-mono">
-      {/* 當秒數小於 10 ， 在前面加一個 0 ， 三元運算子 */}
-      {minutes}:{remainSeconds < 10 ? `0${remainSeconds}` : remainSeconds}
-    </div>
+    <>
+      <div className="text-2xl font-mono text-amber-50 mb-1">
+        {isActive ? `${modeText[mode]}` : '準備開始'}
+      </div>
+      <div className="text-4xl font-mono text-amber-50 ">
+        {/* 當秒數小於 10 ， 在前面加一個 0 ， 三元運算子 */}
+        {minutes}:{remainSeconds < 10 ? `0${remainSeconds}` : remainSeconds}
+      </div>
+    </>
   );
 }
