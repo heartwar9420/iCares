@@ -6,11 +6,18 @@ import { useRef } from 'react';
 interface Props {
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
-  setSeconds: React.Dispatch<React.SetStateAction<number>>;
   seconds: number;
+  setSeconds: React.Dispatch<React.SetStateAction<number>>;
+  startNewTimer: (targetMode?: string) => Promise<void>;
 }
 
-export default function FocusButton({ isActive, seconds, setIsActive, setSeconds }: Props) {
+export default function FocusButton({
+  isActive,
+  seconds,
+  setIsActive,
+  setSeconds,
+  startNewTimer,
+}: Props) {
   // 設定時間便利貼，預設數字
   const timeRef = useRef(0);
 
@@ -30,26 +37,14 @@ export default function FocusButton({ isActive, seconds, setIsActive, setSeconds
     if (timeDelta > 1000) {
       // 停止計時
       setIsActive(false);
-      // 把時間設置成1500秒
+      // 把時間重置成1500秒
       setSeconds(1500);
     } else {
       // 如果現在不是倒數的狀態
       if (!isActive) {
         // 判斷是否為「全新開始」：只有歸零或重置時才向後端拿新時間
         if (seconds === 1500 || seconds === 0) {
-          // fetchAPI
-          const response = await fetch('http://127.0.0.1:8000/api/timer');
-          // 轉成json格式
-          const result = await response.json();
-          const data = result.data;
-          // 把後端的時間存到end_time 變數中
-          const end_time = new Date(data.end_time);
-          // 計算後端的結束時間和現在的時間 / 1000 轉成秒數格式(原本是毫秒)
-          const select_time = Math.floor((end_time.getTime() - now_time.getTime()) / 1000);
-          // 把時間設成 select_time
-          setSeconds(select_time);
-          // 開始計時
-          setIsActive(true);
+          startNewTimer();
         } else {
           setIsActive(true);
         }
@@ -64,7 +59,7 @@ export default function FocusButton({ isActive, seconds, setIsActive, setSeconds
       <button
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        className={`mt-4 px-6 py-2 text-white rounded hover:cursor-pointer transition-colors active:scale-95 duration-75
+        className={`px-6 py-2 text-white rounded hover:cursor-pointer transition-colors
           ${isActive ? 'bg-red-500 hover:bg-red-500/80' : 'bg-blue-500 hover:bg-blue-500/80'}`}
       >
         {isActive ? '結束專注' : '開始專注'}
