@@ -5,9 +5,10 @@ interface Props {
   setSeconds: React.Dispatch<React.SetStateAction<number>>;
   // 等同於 setSeconds: (val: number | ((prev: number) => number)) => void;
   isActive: boolean;
-  mode: string;
-  setMode: React.Dispatch<React.SetStateAction<string>>;
-  startNewTimer: (targetMode?: string) => Promise<void>;
+  mode: 'work' | 'rest' | 'longRest';
+  // 不用 string 而是讓變數是特定的幾個字 (可以用 聯集型別！)
+  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'longRest'>>;
+  startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
 }
 
 export default function CountDownTimer({
@@ -50,17 +51,19 @@ export default function CountDownTimer({
 
     // 撤銷這張號碼牌對應的計時任務，確保舊的計時器被清乾淨，不浪費記憶體。
     return () => clearInterval(timerId);
-  }, [seconds, isActive]); // 依賴陣列 當秒數變更或 開始專注後 就重新執行一次這個 useEffect
+  }, [seconds, isActive, mode, startNewTimer, setMode, setSeconds]);
+  // 依賴陣列 當秒數變更或 開始專注後 就重新執行一次這個 useEffect
+  // 要把所以在 useEffect 中用過的變數都放進去，不然會出現黃色波浪號
 
   return (
-    <>
-      <div className="text-2xl font-mono text-amber-50 mb-1">
+    <div className="flex gap-5 bg-orange-800 rounded-2xl p-3 h-fit min-w-80 w-fit mt-10 mx-10 justify-center">
+      <div className="text-4xl font-mono text-amber-50">
         {isActive ? `${modeText[mode]}` : '準備開始'}
       </div>
       <div className="text-4xl font-mono text-amber-50 ">
         {/* 當秒數小於 10 ， 在前面加一個 0 ， 三元運算子 */}
         {minutes}:{remainSeconds < 10 ? `0${remainSeconds}` : remainSeconds}
       </div>
-    </>
+    </div>
   );
 }

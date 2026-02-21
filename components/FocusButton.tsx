@@ -8,7 +8,7 @@ interface Props {
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
   seconds: number;
   setSeconds: React.Dispatch<React.SetStateAction<number>>;
-  startNewTimer: (targetMode?: string) => Promise<void>;
+  startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
 }
 
 export default function FocusButton({
@@ -55,7 +55,7 @@ export default function FocusButton({
   };
 
   return (
-    <div className="flex flex-col items-center p-10">
+    <div className="flex flex-col items-center">
       <button
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
