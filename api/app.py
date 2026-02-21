@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 # 設定白名單：只有名單內的「地址」可以進來跟後端拿資料
-origins = ["http://localhost:3000"]
+origins = ["http://localhost:3000", "https://i-cares.vercel.app"]
+=======
+
 
 app.add_middleware(
     CORSMiddleware,
