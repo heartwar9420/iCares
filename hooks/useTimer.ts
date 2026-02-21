@@ -15,7 +15,10 @@ export default function useTimer() {
     // 把現在的時間記下來
     const now_time = new Date();
 
-    const URL = `http://127.0.0.1:8000/api/timer?mode=${targetMode}`;
+    const URL = `${process.env.NEXT_PUBLIC_API_URL}/api/timer?mode=${targetMode}`;
+    // const URL = `http://127.0.0.1:8000/api/timer?mode=${targetMode}`;
+    // 因為要上線，後端的網址就不會是固定的
+    // 而 NEXT_PUBLIC 是固定寫法 , _API_URL 是自已取名的
     try {
       // fetchAPI
       const response = await fetch(URL);
