@@ -6,7 +6,8 @@ export default function useTimer() {
   // 是否計時，預設暫停
   const [isActive, setIsActive] = useState(false);
   // 設定狀態，預設是'work'
-  const [mode, setMode] = useState('work');
+  // const [mode, setMode] = useState('work');
+  const [mode, setMode] = useState<'work' | 'rest' | 'longRest'>('work');
 
   // 設定 startNewTimer 函式 targetMode
   //(targetMode = mode) 的意思是：如果不傳參數，就預設使用目前的 mode

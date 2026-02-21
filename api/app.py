@@ -40,3 +40,22 @@ async def get_timer(mode: str = "work"):
     data = {"start_time": start_time.isoformat(), "end_time": end_time.isoformat()}
 
     return {"data": data}
+
+
+# @app.websocket("/path")
+# async def websocket_endpoint(websocket: WebSocket):
+#     # 接受連線
+#     await websocket.accept()
+#     while True:
+#         # 接收文字資料
+#         data = await websocket.receive_text()
+#         # 發送回應
+#         await websocket.send_text(f"Message text was: {data}")
+#         {"user_001":{
+#             "status":"work",
+#             websocket:"websocket_A"
+#         }}
+#         {"使用者":{
+#             "狀態":"工作中",
+#             websocket:"websocket_A" # 這是什麼意思？
+#         }}

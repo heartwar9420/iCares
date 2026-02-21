@@ -1,18 +1,20 @@
 'use client';
 
-import CountDownTimer from '@/components/CountDownTimer';
-import FocusButton from '@/components/FocusButton';
 import BackgroundVideo from '@/components/BackgroundVideo';
 import useTimer from '@/hooks/useTimer';
+import FocusBoard from '@/components/FocusBoard';
+import useVideoController from '@/hooks/useVideoController';
+import PersonalDashboard from '@/components/PersonalDashboard';
 
 export default function Page() {
   const timer = useTimer();
+  const video = useVideoController();
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-10 overflow-hidden">
-      <CountDownTimer {...timer} />
-      <FocusButton {...timer} />
-      <BackgroundVideo />
+    <div className="relative min-h-screen grid grid-cols-2 overflow-hidden">
+      <FocusBoard {...timer} {...video} />
+      <PersonalDashboard {...timer} />
+      <BackgroundVideo {...video} />
     </div>
   );
 }
