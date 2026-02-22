@@ -9,23 +9,10 @@ export default function useTimer() {
   // const [mode, setMode] = useState('work');
   const [mode, setMode] = useState<'work' | 'rest' | 'long_rest'>('work');
 
-  const [workCount, setWorkCount] = useState(0);
-
   // 設定 startNewTimer 函式 targetMode
   //(targetMode = mode) 的意思是：如果不傳參數，就預設使用目前的 mode
   const startNewTimer = async (targetMode = mode) => {
-    let finalMode = targetMode;
-    if (targetMode === 'rest') {
-      const nextCount = workCount + 1;
-      if (nextCount >= 3) {
-        finalMode = 'long_rest';
-        setWorkCount(0);
-      } else {
-        setWorkCount(nextCount);
-      }
-    }
-
-    const URL = `${process.env.NEXT_PUBLIC_API_URL}/api/timer?mode=${finalMode}`;
+    const URL = `${process.env.NEXT_PUBLIC_API_URL}/api/timer?mode=${targetMode}`;
     // const URL = `http://127.0.0.1:8000/api/timer?mode=${targetMode}`;
     // 因為要上線，後端的網址就不會是固定的
     // 而 NEXT_PUBLIC 是固定寫法 , _API_URL 是自已取名的
@@ -35,14 +22,14 @@ export default function useTimer() {
       // 轉成json格式
       const result = await response.json();
       const data = result.data;
-      setMode(finalMode);
-      setSeconds(Number(data.duration_seconds));
-      // 開始計時
+
+      setMode(data.mode);
+      setSeconds(data.duration_seconds);
       setIsActive(true);
     } catch (error) {
       console.log('Failed to fetch timer:', error);
       setIsActive(false);
     }
   };
-  return { seconds, setSeconds, isActive, setIsActive, mode, setMode, startNewTimer, workCount };
+  return { seconds, setSeconds, isActive, setIsActive, mode, setMode, startNewTimer };
 }

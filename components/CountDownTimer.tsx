@@ -33,7 +33,6 @@ export default function CountDownTimer({
     if (isActive && seconds === 0) {
       const nextMode = mode === 'work' ? 'rest' : 'work';
       startNewTimer(nextMode);
-      setMode(nextMode);
       return;
     }
     if (!isActive || seconds <= 0) {

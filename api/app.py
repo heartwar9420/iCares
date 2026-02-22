@@ -17,34 +17,40 @@ app.add_middleware(
     allow_headers=["*"],  # 允許的標頭 ("*" 為全部)
 )
 
+completed_work_count = 0
+
 
 @app.get("/api/timer")
 async def get_timer(mode: str = "work"):
-    # mode = 宣告mode變數是字串 並且預設是 work
-
-    # datetime.now = 取得現在時間
-    # (timezone.utc) = 把時間轉換成標準時間
+    global completed_work_count
     start_time = datetime.now(timezone.utc)
 
+    final_mode = mode
+    seconds_value = 3  # 預設3秒
+
     if mode == "rest":
-        # timedelta(時間差) = 用來算間隔
-        end_time = start_time + timedelta(seconds=2)
+        # 每當請求休息，次數就 +1
+        completed_work_count += 1
 
-    elif mode == "long_rest":
-        end_time = start_time + timedelta(seconds=4)
+        if completed_work_count >= 3:
+            final_mode = "long_rest"
+            seconds_value = 5  # 長休息秒數
+            completed_work_count = 0  # 計數歸零
+        else:
+            seconds_value = 3  # 一般休息秒數
 
-    else:
-        end_time = start_time + timedelta(seconds=3)
+    elif mode == "long_rest":  # 預防萬一直接請求長休息
+        seconds_value = 5  # 長休息秒數
+        completed_work_count = 0  # 計數歸零
 
-    duration_seconds = int((end_time - start_time).total_seconds())
+    else:  # 工作時間 3秒
+        seconds_value = 4
 
-    # isoformat = 把 python的時間格式轉成 ISO 格式的字串
+    duration_seconds = seconds_value
     data = {
-        "start_time": start_time.isoformat(),
-        "end_time": end_time.isoformat(),
+        "mode": final_mode,  # 告訴前端「最後決定」的模式
         "duration_seconds": duration_seconds,
     }
-
     return {"data": data}
 
 
