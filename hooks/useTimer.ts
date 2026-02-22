@@ -37,7 +37,7 @@ export default function useTimer() {
       const result = await response.json();
       const data = result.data;
       setMode(finalMode);
-      setSeconds(data.duration_seconds);
+      setSeconds(Number(data.duration_seconds));
       // 開始計時
       setIsActive(true);
     } catch (error) {

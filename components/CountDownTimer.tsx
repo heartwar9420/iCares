@@ -31,12 +31,9 @@ export default function CountDownTimer({
 
   useEffect(() => {
     if (isActive && seconds === 0) {
-      if (mode === 'work') {
-        startNewTimer('rest');
-      } else {
-        setMode('work');
-        startNewTimer('work');
-      }
+      const nextMode = mode === 'work' ? 'rest' : 'work';
+      startNewTimer(nextMode);
+      setMode(nextMode);
       return;
     }
     if (!isActive || seconds <= 0) {
@@ -46,7 +43,7 @@ export default function CountDownTimer({
     // setInterval((),1000) = 每隔 1000 毫秒執行一次前面的動作
     const timerId = setInterval(() => {
       // setSeconds((先去看一下目前的數字) => 把目前的數字 -1 再放回來)
-      setSeconds((prev) => prev - 1);
+      setSeconds((prev) => (prev > 0 ? prev - 1 : 0));
       // 每隔1秒做一次
     }, 1000);
 
