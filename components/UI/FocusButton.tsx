@@ -38,12 +38,12 @@ export default function FocusButton({
       // 停止計時
       setIsActive(false);
       // 把時間重置成1500秒
-      setSeconds(8);
+      setSeconds(3);
     } else {
       // 如果現在不是倒數的狀態
       if (!isActive) {
         // 判斷是否為「全新開始」：只有歸零或重置時才向後端拿新時間
-        if (seconds === 8 || seconds === 0) {
+        if (seconds === 3 || seconds === 0) {
           startNewTimer();
         } else {
           setIsActive(true);
