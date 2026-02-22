@@ -6,9 +6,9 @@ interface TimerProps {
   // 等同於 setSeconds: (val: number | ((prev: number) => number)) => void;
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
-  mode: 'work' | 'rest' | 'longRest';
-  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'longRest'>>;
-  startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
+  mode: 'work' | 'rest' | 'long_rest';
+  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'long_rest'>>;
+  startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
 }
 interface VideoProps {
   isMuted: boolean;

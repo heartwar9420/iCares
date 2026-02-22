@@ -31,13 +31,19 @@ async def get_timer(mode: str = "work"):
         end_time = start_time + timedelta(seconds=2)
 
     elif mode == "long_rest":
-        end_time = start_time + timedelta(seconds=5)
+        end_time = start_time + timedelta(seconds=4)
 
     else:
-        end_time = start_time + timedelta(seconds=8)
+        end_time = start_time + timedelta(seconds=3)
+
+    duration_seconds = int((end_time - start_time).total_seconds())
 
     # isoformat = 把 python的時間格式轉成 ISO 格式的字串
-    data = {"start_time": start_time.isoformat(), "end_time": end_time.isoformat()}
+    data = {
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "duration_seconds": duration_seconds,
+    }
 
     return {"data": data}
 
