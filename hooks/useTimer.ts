@@ -14,7 +14,6 @@ export default function useTimer() {
   // 設定 startNewTimer 函式 targetMode
   //(targetMode = mode) 的意思是：如果不傳參數，就預設使用目前的 mode
   const startNewTimer = async (targetMode = mode) => {
-    setIsActive(false);
     let finalMode = targetMode;
     if (targetMode === 'rest') {
       const nextCount = workCount + 1;
@@ -42,6 +41,7 @@ export default function useTimer() {
       setIsActive(true);
     } catch (error) {
       console.log('Failed to fetch timer:', error);
+      setIsActive(false);
     }
   };
   return { seconds, setSeconds, isActive, setIsActive, mode, setMode, startNewTimer, workCount };
