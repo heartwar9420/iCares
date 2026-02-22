@@ -1,10 +1,10 @@
 'use client';
 
-import BackgroundVideo from '@/components/BackgroundVideo';
+import BackgroundVideo from '@/components/Layout/BackgroundVideo';
 import useTimer from '@/hooks/useTimer';
-import FocusBoard from '@/components/FocusBoard';
+import FocusBoard from '@/components/Layout/FocusBoard';
 import useVideoController from '@/hooks/useVideoController';
-import PersonalDashboard from '@/components/PersonalDashboard';
+import PersonalDashboard from '@/components/Layout/PersonalDashboard';
 
 export default function Page() {
   const timer = useTimer();
