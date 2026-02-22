@@ -8,8 +8,18 @@ interface TimerProps {
   startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
 }
 
-import FocusButton from './FocusButton';
+import ActivityGrid from '../Stats/ActivityGrid';
+import AuthButtonGroup from '../Auth/AuthButtonGroup';
+import TodoList from '../Todo/TodoList';
+import FocusButton from '../UI/FocusButton';
 
 export default function PersonalDashboard(props: TimerProps) {
-  return <FocusButton {...props} />;
+  return (
+    <div className="grid grid-rows-[auto 1fr 1fr auto]">
+      <AuthButtonGroup />
+      <TodoList />
+      <ActivityGrid />
+      <FocusButton {...props} />
+    </div>
+  );
 }
