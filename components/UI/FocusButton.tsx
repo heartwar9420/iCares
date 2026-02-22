@@ -55,12 +55,12 @@ export default function FocusButton({
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center mt-10">
       <button
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        className={`px-6 py-2 text-white rounded hover:cursor-pointer transition-colors
-          ${isActive ? 'bg-red-500 hover:bg-red-500/80' : 'bg-blue-500 hover:bg-blue-500/80'}`}
+        className={`px-50 py-10 text-white rounded-2xl cursor-pointer transition-colors hover:opacity-90 hover:scale-110
+          ${isActive ? 'bg-red-500 hover:bg-red-500/90' : 'bg-blue-500 hover:bg-blue-500/90'}`}
       >
         {isActive ? '結束專注' : '開始專注'}
       </button>

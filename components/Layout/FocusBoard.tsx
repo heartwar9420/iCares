@@ -11,7 +11,6 @@ interface TimerProps {
   startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
 }
 interface VideoProps {
-  size: number;
   isMuted: boolean;
   setIsMuted: React.Dispatch<React.SetStateAction<boolean>>;
   isPaused: boolean;
@@ -19,8 +18,8 @@ interface VideoProps {
 }
 type AllProps = TimerProps & VideoProps;
 
-import ChatRoom from './ChatRoom';
-import CountDownTimer from './CountDownTimer';
+import ChatRoom from '../Chat/ChatRoom';
+import CountDownTimer from '../CountDownTimer';
 import SettingBar from './SettingBar';
 
 export default function FocusBoard(props: AllProps) {
