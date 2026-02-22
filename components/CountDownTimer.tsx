@@ -5,10 +5,10 @@ interface Props {
   setSeconds: React.Dispatch<React.SetStateAction<number>>;
   // 等同於 setSeconds: (val: number | ((prev: number) => number)) => void;
   isActive: boolean;
-  mode: 'work' | 'rest' | 'longRest';
+  mode: 'work' | 'rest' | 'long_rest';
   // 不用 string 而是讓變數是特定的幾個字 (可以用 聯集型別！)
-  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'longRest'>>;
-  startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
+  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'long_rest'>>;
+  startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
 }
 
 export default function CountDownTimer({
@@ -26,22 +26,23 @@ export default function CountDownTimer({
   const modeText = {
     work: '專注中',
     rest: '休息中',
-    longRest: '長休息',
+    long_rest: '長休息',
   };
 
   useEffect(() => {
     if (isActive && seconds === 0) {
-      const nextMode = mode === 'work' ? 'rest' : 'work';
-      // 更新 React 的狀態 (為了畫面顯示)
-      setMode(nextMode);
+      if (mode === 'work') {
+        startNewTimer('rest');
+      } else {
+        setMode('work');
+        startNewTimer('work');
+      }
+      return;
+    }
+    if (!isActive || seconds <= 0) {
+      return;
+    }
 
-      // 關鍵！直接告訴後端我們要拿 nextMode 的時間，不要等 React 更新
-      startNewTimer(nextMode);
-      return;
-    }
-    if (!isActive) {
-      return;
-    }
     // setInterval((),1000) = 每隔 1000 毫秒執行一次前面的動作
     const timerId = setInterval(() => {
       // setSeconds((先去看一下目前的數字) => 把目前的數字 -1 再放回來)
