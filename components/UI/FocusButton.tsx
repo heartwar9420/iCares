@@ -8,7 +8,7 @@ interface Props {
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
   seconds: number;
   setSeconds: React.Dispatch<React.SetStateAction<number>>;
-  startNewTimer: (targetMode?: 'work' | 'rest' | 'longRest') => Promise<void>;
+  startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
 }
 
 export default function FocusButton({
