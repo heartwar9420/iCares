@@ -28,13 +28,13 @@ async def get_timer(mode: str = "work"):
 
     if mode == "rest":
         # timedelta(時間差) = 用來算間隔
-        end_time = start_time + timedelta(seconds=20)
+        end_time = start_time + timedelta(seconds=2)
 
     elif mode == "long_rest":
-        end_time = start_time + timedelta(minutes=20)
+        end_time = start_time + timedelta(seconds=5)
 
     else:
-        end_time = start_time + timedelta(minutes=20)
+        end_time = start_time + timedelta(seconds=8)
 
     # isoformat = 把 python的時間格式轉成 ISO 格式的字串
     data = {"start_time": start_time.isoformat(), "end_time": end_time.isoformat()}
