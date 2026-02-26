@@ -21,30 +21,34 @@ completed_work_count = 0
 
 
 @app.get("/api/timer")
-async def get_timer(mode: str = "work"):
+async def get_timer(
+    mode: str = "work",
+    work_time: int = 3,
+    rest_time: int = 3,
+    long_rest_time: int = 5,
+    completed_work_count_setting: int = 3,
+):
     global completed_work_count
-    start_time = datetime.now(timezone.utc)
 
     final_mode = mode
-    seconds_value = 3  # 預設3秒
 
     if mode == "rest":
         # 每當請求休息，次數就 +1
         completed_work_count += 1
 
-        if completed_work_count >= 3:
+        if completed_work_count >= completed_work_count_setting:
             final_mode = "long_rest"
-            seconds_value = 5  # 長休息秒數
+            seconds_value = long_rest_time  # 長休息秒數
             completed_work_count = 0  # 計數歸零
         else:
-            seconds_value = 3  # 一般休息秒數
+            seconds_value = rest_time  # 一般休息秒數
 
     elif mode == "long_rest":  # 預防萬一直接請求長休息
-        seconds_value = 5  # 長休息秒數
+        seconds_value = long_rest_time  # 長休息秒數
         completed_work_count = 0  # 計數歸零
 
-    else:  # 工作時間 3秒
-        seconds_value = 4
+    else:  # 工作時間
+        seconds_value = work_time
 
     duration_seconds = seconds_value
     data = {

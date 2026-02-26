@@ -4,18 +4,18 @@
 import { useRef } from 'react';
 
 interface Props {
-  isActive: boolean;
-  setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
-  seconds: number;
-  setSeconds: React.Dispatch<React.SetStateAction<number>>;
+  isTimerRunning: boolean;
+  setIsTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
+  remainingSeconds: number;
+  setRemainingSeconds: React.Dispatch<React.SetStateAction<number>>;
   startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
 }
 
 export default function FocusButton({
-  isActive,
-  seconds,
-  setIsActive,
-  setSeconds,
+  isTimerRunning,
+  remainingSeconds,
+  setIsTimerRunning,
+  setRemainingSeconds,
   startNewTimer,
 }: Props) {
   // 設定時間便利貼，預設數字
@@ -36,20 +36,20 @@ export default function FocusButton({
     // 如果時間差>1秒(長按)
     if (timeDelta > 1000) {
       // 停止計時
-      setIsActive(false);
+      setIsTimerRunning(false);
       // 把時間重置成1500秒
-      setSeconds(3);
+      setRemainingSeconds(3);
     } else {
       // 如果現在不是倒數的狀態
-      if (!isActive) {
+      if (!isTimerRunning) {
         // 判斷是否為「全新開始」：只有歸零或重置時才向後端拿新時間
-        if (seconds === 3 || seconds === 0) {
+        if (remainingSeconds === 3 || remainingSeconds === 0) {
           startNewTimer();
         } else {
-          setIsActive(true);
+          setIsTimerRunning(true);
         }
       } else {
-        setIsActive(false);
+        setIsTimerRunning(false);
       }
     }
   };
@@ -60,9 +60,9 @@ export default function FocusButton({
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         className={`px-50 py-10 text-white rounded-2xl cursor-pointer transition-colors hover:opacity-90 hover:scale-110
-          ${isActive ? 'bg-red-500 hover:bg-red-500/90' : 'bg-blue-500 hover:bg-blue-500/90'}`}
+          ${isTimerRunning ? 'bg-red-500 hover:bg-red-500/90' : 'bg-blue-500 hover:bg-blue-500/90'}`}
       >
-        {isActive ? '結束專注' : '開始專注'}
+        {isTimerRunning ? '結束專注' : '開始專注'}
       </button>
     </div>
   );

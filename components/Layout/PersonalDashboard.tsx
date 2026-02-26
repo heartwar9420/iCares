@@ -1,8 +1,8 @@
 interface TimerProps {
-  seconds: number;
-  setSeconds: React.Dispatch<React.SetStateAction<number>>;
-  isActive: boolean;
-  setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
+  remainingSeconds: number;
+  setRemainingSeconds: React.Dispatch<React.SetStateAction<number>>;
+  isTimerRunning: boolean;
+  setIsTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
   mode: 'work' | 'rest' | 'long_rest';
   setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'long_rest'>>;
   startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
