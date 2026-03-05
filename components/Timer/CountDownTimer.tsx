@@ -23,7 +23,7 @@ export default function CountDownTimer() {
   }
 
   return (
-    <div className="flex gap-5 bg-orange-800 rounded-2xl p-3 h-fit min-w-80 w-fit mt-10 mx-10 justify-center">
+    <div className="flex gap-5 bg-orange-800 rounded-2xl p-3 h-fit min-w-80 w-fit mt-2 mx-2 justify-center">
       <div className="text-4xl font-mono text-amber-50">
         {remainingSeconds === 0 ? '準備開始' : `${modeText[mode]}`}
       </div>

@@ -72,7 +72,6 @@ export default function TimerConfigPanel() {
     setIsReplay,
     resetTimer,
     isReplay,
-    setOriginTimerMode,
     originTimerMode,
   } = useTimerContext();
   const isInputsLocked = timerCombo !== 'CustomCombo';
@@ -250,9 +249,12 @@ export default function TimerConfigPanel() {
             setIsTimerConfigOpen(false);
             resetTimer();
           }}
+          className="flex items-center text-green-700 gap-3"
         >
-          <SquareCheck size={36} color="green" />
+          <span className="text-2xl ">確認</span>
+          <SquareCheck size={36} />
         </ActionIconButton>
+
         <ActionIconButton
           onClick={() => {
             setIsTimerConfigOpen(false);
@@ -262,8 +264,10 @@ export default function TimerConfigPanel() {
               setTimerDurationConfigs(originTimerMode.timerDurationConfigs);
             }
           }}
+          className="flex items-center text-red-700 gap-3"
         >
-          <SquareX size={36} color="red" />
+          <span className="text-2xl ">取消</span>
+          <SquareX size={36} />
         </ActionIconButton>
       </div>
     </div>
