@@ -1,25 +1,15 @@
-interface TimerProps {
-  seconds: number;
-  setSeconds: React.Dispatch<React.SetStateAction<number>>;
-  isActive: boolean;
-  setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
-  mode: 'work' | 'rest' | 'long_rest';
-  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'long_rest'>>;
-  startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
-}
-
 import ActivityGrid from '../Stats/ActivityGrid';
 import AuthButtonGroup from '../Auth/AuthButtonGroup';
 import TodoList from '../Todo/TodoList';
-import FocusButton from '../UI/FocusButton';
+import TimerControls from '../Timer/TimerControls';
 
-export default function PersonalDashboard(props: TimerProps) {
+export default function PersonalDashboard() {
   return (
-    <div className="grid grid-rows-[auto 1fr 1fr auto]">
+    <div className="grid grid-rows-[auto_1fr_1fr_auto] h-screen items-start">
       <AuthButtonGroup />
       <TodoList />
       <ActivityGrid />
-      <FocusButton {...props} />
+      <TimerControls />
     </div>
   );
 }
