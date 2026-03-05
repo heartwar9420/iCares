@@ -9,9 +9,9 @@ import { Info, MonitorPause, MonitorPlay, Volume2, VolumeOff } from 'lucide-reac
 import ActionIconButton from '../UI/ActionIconButton';
 
 export default function SettingBar({ isMuted, setIsMuted, isPaused, setIsPaused }: Props) {
-  const size = 36;
+  const size = 24;
   return (
-    <div className="flex gap-10 py-2 px-5 ml-10 mt-10 w-fit h-fit rounded-2xl bg-amber-900 opacity-90">
+    <div className="flex gap-5 py-2 px-5 ml-2 mt-2 w-fit h-fit rounded-2xl bg-amber-900 opacity-90">
       <ActionIconButton>
         <Info size={size} color="#fef3c7" />
       </ActionIconButton>
