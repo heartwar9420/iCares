@@ -1,32 +1,21 @@
 'use client';
 
-interface TimerProps {
-  remainingSeconds: number;
-  setRemainingSeconds: React.Dispatch<React.SetStateAction<number>>;
-  // 等同於 setSeconds: (val: number | ((prev: number) => number)) => void;
-  isTimerRunning: boolean;
-  setIsTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
-  mode: 'work' | 'rest' | 'long_rest';
-  setMode: React.Dispatch<React.SetStateAction<'work' | 'rest' | 'long_rest'>>;
-  startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
-}
 interface VideoProps {
   isMuted: boolean;
   setIsMuted: React.Dispatch<React.SetStateAction<boolean>>;
   isPaused: boolean;
   setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
 }
-type AllProps = TimerProps & VideoProps;
 
 import ChatRoom from '../Chat/ChatRoom';
-import CountDownTimer from '../CountDownTimer';
+import CountDownTimer from '../Timer/CountDownTimer';
 import SettingBar from './SettingBar';
 
-export default function FocusBoard(props: AllProps) {
+export default function FocusBoard(props: VideoProps) {
   return (
     <div>
       <SettingBar {...props} />
-      <CountDownTimer {...props} />
+      <CountDownTimer />
       <ChatRoom />
     </div>
   );

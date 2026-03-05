@@ -7,7 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 # 設定白名單：只有名單內的「地址」可以進來跟後端拿資料
-origins = ["http://localhost:3000", "https://i-cares.vercel.app"]
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://i-cares.vercel.app",
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,60 +22,54 @@ app.add_middleware(
 )
 
 completed_work_count = 0
+accumulated_work_seconds = 0
 
 
 @app.get("/api/timer")
 async def get_timer(
     mode: str = "work",
-    work_time: int = 3,
-    rest_time: int = 3,
-    long_rest_time: int = 5,
-    completed_work_count_setting: int = 3,
+    work_time_minutes: float = 20,
+    short_rest_time_seconds: int = 20,
+    long_rest_time_minutes: float = 20,
+    rounds_to_long_rest: int = 5,
 ):
-    global completed_work_count
+    global completed_work_count, accumulated_work_seconds
 
     final_mode = mode
+
+    work_time_seconds = work_time_minutes * 60
+    long_rest_time_seconds = long_rest_time_minutes * 60
 
     if mode == "rest":
         # 每當請求休息，次數就 +1
         completed_work_count += 1
 
-        if completed_work_count >= completed_work_count_setting:
+        if (
+            completed_work_count >= rounds_to_long_rest
+            or accumulated_work_seconds >= 5400
+        ):
             final_mode = "long_rest"
-            seconds_value = long_rest_time  # 長休息秒數
+            seconds_value = long_rest_time_seconds  # 長休息秒數
             completed_work_count = 0  # 計數歸零
+            accumulated_work_seconds = 0
         else:
-            seconds_value = rest_time  # 一般休息秒數
+            seconds_value = short_rest_time_seconds  # 一般休息秒數
 
     elif mode == "long_rest":  # 預防萬一直接請求長休息
-        seconds_value = long_rest_time  # 長休息秒數
+        seconds_value = long_rest_time_seconds  # 長休息秒數
         completed_work_count = 0  # 計數歸零
+        accumulated_work_seconds = 0
 
     else:  # 工作時間
-        seconds_value = work_time
+        if accumulated_work_seconds + work_time_seconds > 5400:
+            seconds_value = 5400 - accumulated_work_seconds
+            accumulated_work_seconds = 5400
+        else:
+            seconds_value = work_time_seconds
+            accumulated_work_seconds += work_time_seconds
 
-    duration_seconds = seconds_value
     data = {
         "mode": final_mode,  # 告訴前端「最後決定」的模式
-        "duration_seconds": duration_seconds,
+        "duration_seconds": seconds_value,
     }
     return {"data": data}
-
-
-# @app.websocket("/path")
-# async def websocket_endpoint(websocket: WebSocket):
-#     # 接受連線
-#     await websocket.accept()
-#     while True:
-#         # 接收文字資料
-#         data = await websocket.receive_text()
-#         # 發送回應
-#         await websocket.send_text(f"Message text was: {data}")
-#         {"user_001":{
-#             "status":"work",
-#             websocket:"websocket_A"
-#         }}
-#         {"使用者":{
-#             "狀態":"工作中",
-#             websocket:"websocket_A" # 這是什麼意思？
-#         }}

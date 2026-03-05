@@ -1,25 +1,14 @@
 'use client';
 
+import { useTimerContext } from '@/Context/TimerContext';
 // useRef = 便利貼，存資料但不會觸發畫面重畫
 import { useRef } from 'react';
 
-interface Props {
-  isTimerRunning: boolean;
-  setIsTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
-  remainingSeconds: number;
-  setRemainingSeconds: React.Dispatch<React.SetStateAction<number>>;
-  startNewTimer: (targetMode?: 'work' | 'rest' | 'long_rest') => Promise<void>;
-}
-
-export default function FocusButton({
-  isTimerRunning,
-  remainingSeconds,
-  setIsTimerRunning,
-  setRemainingSeconds,
-  startNewTimer,
-}: Props) {
+export default function FocusButton() {
   // 設定時間便利貼，預設數字
   const timeRef = useRef(0);
+
+  const { isTimerRunning, toggleTimer, resetTimer } = useTimerContext();
 
   // 函式：按下滑鼠
   const handleMouseDown = async () => {
@@ -35,27 +24,14 @@ export default function FocusButton({
     const timeDelta = now_time.getTime() - timeRef.current;
     // 如果時間差>1秒(長按)
     if (timeDelta > 1000) {
-      // 停止計時
-      setIsTimerRunning(false);
-      // 把時間重置成1500秒
-      setRemainingSeconds(3);
+      resetTimer();
     } else {
-      // 如果現在不是倒數的狀態
-      if (!isTimerRunning) {
-        // 判斷是否為「全新開始」：只有歸零或重置時才向後端拿新時間
-        if (remainingSeconds === 3 || remainingSeconds === 0) {
-          startNewTimer();
-        } else {
-          setIsTimerRunning(true);
-        }
-      } else {
-        setIsTimerRunning(false);
-      }
+      toggleTimer();
     }
   };
 
   return (
-    <div className="flex flex-col items-center mt-10">
+    <div>
       <button
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
