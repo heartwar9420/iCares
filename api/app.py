@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware  # 前後端連線使用
 from typing import List  # 型別提示
 import datetime  # 日期時間
+from datetime import datetime, timezone, timedelta
 
 
 app = FastAPI()
@@ -109,8 +110,9 @@ async def chat_room_endpoint(client_connection: WebSocket):
         while True:
             # 持續接收前端的 JSON
             incoming_payload = await client_connection.receive_json()
+            tz_taiwan = timezone(timedelta(hours=8))
             # 統一由後端押上時間
-            current_time_string = datetime.datetime.now().strftime("%H:%M")
+            current_time_string = datetime.now(tz_taiwan).strftime("%H:%M")
             incoming_payload["timestamp"] = current_time_string
 
             # 把收到的 JSON 回傳回去給前端

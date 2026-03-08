@@ -18,7 +18,7 @@ export default function MessageArea() {
   const webSocketReference = useRef<WebSocket | null>(null);
 
   // 建立當前使用者的身份狀態
-  const [currentUserName] = useState<string>('小飯');
+  const [currentUserName] = useState<string>('Me');
 
   useEffect(() => {
     // 1. 從環境變數抓出目前的 API 網址 (如果沒有，預設退回本機端網址)
@@ -66,11 +66,11 @@ export default function MessageArea() {
   const handleSendMessage = (newContent: string) => {
     // 確定目前和伺服器有連線中 且 伺服器已經準備完畢，再 send 新訊息給伺服器
     if (webSocketReference.current && webSocketReference.current.readyState === WebSocket.OPEN) {
-      const outgoing_payload = {
+      const outgoingPayload = {
         sender: currentUserName,
         content: newContent,
       };
-      webSocketReference.current.send(JSON.stringify(outgoing_payload));
+      webSocketReference.current.send(JSON.stringify(outgoingPayload));
     } else {
       console.warn('連線尚未完成，請稍後再試');
     }
