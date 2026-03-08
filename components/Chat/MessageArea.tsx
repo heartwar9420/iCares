@@ -21,8 +21,21 @@ export default function MessageArea() {
   const [currentUserName] = useState<string>('小飯');
 
   useEffect(() => {
-    // 建立連線
-    const serverConnection = new WebSocket('ws://localhost:8000/api/chat');
+    // 1. 從環境變數抓出目前的 API 網址 (如果沒有，預設退回本機端網址)
+    const baseApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+    // 2. 將 http 替換為 ws，https 替換為 wss，並接上 chat 的路由
+    const webSocketUrl = baseApiUrl.replace(/^http/, 'ws') + '/api/chat';
+
+    // 3. 建立連線 (使用轉換後的新網址)
+    const serverConnection = new WebSocket(webSocketUrl);
+
+    webSocketReference.current = serverConnection;
+
+    // 如果連線成功 就console一個訊息出來
+    serverConnection.onopen = () => {
+      console.log('已連線到伺服器');
+    };
 
     webSocketReference.current = serverConnection;
     // 如果連線成功 就console一個訊息出來
