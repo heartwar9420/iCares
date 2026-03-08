@@ -146,7 +146,7 @@ export default function TodoList() {
     // 用 as string 告訴系統拿到的資料一定會是 字串 (就不會報錯了)
     setActiveId(event.active.id as string);
   };
-  // over = 抓取中間
+  // over = 抓取結束
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -202,7 +202,6 @@ export default function TodoList() {
           const filtered = prev.filter((t) => t.id !== active.id);
           return [...filtered, { ...item, isFinished: newStatus }];
         }
-        // --------------------------
 
         // 這是原本的邏輯：如果是在有鄰居的地方換位置
         const newOrder = arrayMove(prev, oldIndex, newIndex);

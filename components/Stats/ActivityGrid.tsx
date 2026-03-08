@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { iconOptions } from '../Todo/iconConstants';
 import { useFocus } from '@/Context/FocusContext';
 
@@ -13,21 +13,38 @@ export default function ActivityGrid() {
   // 從 Hook 中拿到這兩個變數
   const { gridCellsArray } = useFocus();
 
+  // 建立一個狀態來記錄現在幾點，避免伺服器端和客戶端時間不一致
+  const [liveCurrentCellId, setLiveCurrentCellId] = useState<number | null>(null);
+
   // 建立一個 Ref 用來抓現在時間的ID
   const currentTimeRef = useRef<HTMLDivElement | null>(null);
-  const now = new Date();
-  const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
-  const currentCellId = Math.floor(currentTotalMinutes / 10);
 
+  // 同步客戶端的本地時間
   useEffect(() => {
-    if (currentTimeRef.current) {
-      // setTimeout 是因為要等到瀏覽器把資料載入完之後，再畫出來才不會報錯，100毫秒的時間就足夠把畫面渲染好了！
-      setTimeout(() => {
-        // block:'center' = 讓現在的時間在畫面的中間
+    const updateIdTimer = setTimeout(() => {
+      const now = new Date();
+      const totalMinutes = now.getHours() * 60 + now.getMinutes();
+      const cellId = Math.floor(totalMinutes / 10);
+
+      // 設定狀態
+      setLiveCurrentCellId(cellId);
+    }, 0);
+    return () => clearTimeout(updateIdTimer);
+    // 只在進場時執行一次
+  }, []);
+
+  // 當 liveCurrentCellId 確定有值且畫面渲染後，執行滾動
+  useEffect(() => {
+    // 只有當 liveCurrentCellId 從 null 變成數字，且 Ref 已經抓到元素時才執行
+    if (liveCurrentCellId !== null && currentTimeRef.current) {
+      const scrollTimer = setTimeout(() => {
         currentTimeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
+
+      return () => clearTimeout(scrollTimer);
     }
-  }, []);
+    // 只有當 liveCurrentCellId 改變時才觸發滾動邏輯
+  }, [liveCurrentCellId]);
 
   return (
     <div className="flex mt-2 mx-10 p-3 bg-black rounded-2xl max-h-[30vh] overflow-y-auto ">
@@ -39,7 +56,7 @@ export default function ActivityGrid() {
           const hours = Math.floor(totalMinutes / 60);
           const mins = totalMinutes % 60;
           const timeString = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-          const isCurrentTimeCell = cell.id === currentCellId;
+          const isCurrentTimeCell = cell.id === liveCurrentCellId;
           return (
             <div
               key={cell.id}

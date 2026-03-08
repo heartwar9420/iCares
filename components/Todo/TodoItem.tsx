@@ -43,6 +43,16 @@ export default function TodoItem({
   const [editTitleBuffer, setEditTitleBuffer] = useState(TodoItemTitle);
   // isOpenPalettePanel 用來判斷開啟 panel
   const [isOpenPalettePanel, setIsOpenPalettePanel] = useState(false);
+  // 用來監聽 input 的 Ref
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (isEditModeActive && inputRef.current) {
+      // 聚焦輸入框
+      inputRef.current.focus();
+      // 選取內容
+      inputRef.current.select();
+    }
+  }, [isEditModeActive]);
 
   // 從 Hook 中解構出需要的零件
   const {
@@ -94,6 +104,7 @@ export default function TodoItem({
       </ActionIconButton>
       {isEditModeActive ? (
         <input
+          ref={inputRef}
           value={editTitleBuffer}
           onChange={(e) => {
             setEditTitleBuffer(e.target.value);

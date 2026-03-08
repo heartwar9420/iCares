@@ -29,7 +29,7 @@ export default function TodoInput({ onAddTodo }: Props) {
         <SquareArrowRightExit size={size} />
       </ActionIconButton>
       <textarea
-        className="flex flex-1 py-2 bg-amber-100/70 rounded-2xl border-2 border-transparent text-center outline-none  hover:border-2 hover:border-red-200 focus:border-red-400 placeholder:text-blue-950"
+        className="flex flex-1 py-2 bg-amber-100/70 rounded-2xl border-2 border-transparent text-center outline-none resize-none hover:border-2 hover:border-red-200 focus:border-red-400 placeholder:text-blue-950"
         placeholder="請輸入待完成的事項"
         rows={1}
         onChange={(e) => setTodoTitleDraft(e.target.value)}
