@@ -16,6 +16,7 @@ import {
   useDroppable,
 } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
+import { useFocus } from '@/Context/FocusContext';
 
 interface Todo {
   id: string;
@@ -109,6 +110,23 @@ export default function TodoList() {
   // 把TodoItem 分成 已完成 和 未完成
   const activeItems = todos.filter((todo) => !todo.isFinished);
   const completedItems = todos.filter((todo) => todo.isFinished);
+
+  // 把 Hook 拿出來
+  const { setActiveTask } = useFocus();
+
+  // 偵測器
+  useEffect(() => {
+    // 如果activeItem > 0  (有未完成事項)
+    if (activeItems.length > 0) {
+      // 把第一個設為 firstTask
+      const firstTask = activeItems[0];
+      // 把 firstTask 的 icon 和 color 存起來
+      setActiveTask(firstTask.icon_name, firstTask.color);
+    } else {
+      // 如果沒東西 就用預設的項目
+      setActiveTask('TreePine', 'text-emerald-500');
+    }
+  }, [todos, activeItems, setActiveTask]);
 
   // 定義感應器
   const sensors = useSensors(
