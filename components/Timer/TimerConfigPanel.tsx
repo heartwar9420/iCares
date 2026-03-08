@@ -134,7 +134,7 @@ export default function TimerConfigPanel() {
     if (key === 'Immersion') {
       setTimerDurationConfigs({
         work_time_minutes: 0.1,
-        short_rest_time_seconds: 1,
+        short_rest_time_seconds: 3,
         long_rest_time_minutes: 0.1,
         rounds_to_long_rest: 2,
       });

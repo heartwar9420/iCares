@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useFocus } from '@/Context/FocusContext';
 
 interface BackupData {
   timerCombo: 'iCares' | 'Immersion' | 'TomatoClock' | 'CustomCombo';
@@ -14,7 +15,17 @@ interface BackupData {
 // 在 typeof window !== 'undefined' 的檢查下建立，避免報錯
 const replaySound = typeof window !== 'undefined' ? new Audio('/RandomBeep.mp3') : null;
 const startSound = typeof window !== 'undefined' ? new Audio('/start.mp3') : null;
-const finishSound = typeof window !== 'undefined' ? new Audio('finish.mp3') : null;
+const finishSound = typeof window !== 'undefined' ? new Audio('/finish.mp3') : null;
+const longRestSound = typeof window !== 'undefined' ? new Audio('/longRest.mp3') : null;
+
+// 用來複製音效、設定音量、播放
+const playAudio = (audioNode: HTMLAudioElement | null, targetVolume: number = 1.0) => {
+  if (audioNode) {
+    const clonedSound = audioNode.cloneNode(true) as HTMLAudioElement;
+    clonedSound.volume = targetVolume;
+    clonedSound.play();
+  }
+};
 
 export default function useTimer() {
   // 剩餘時間有多少？ 預設 0
@@ -37,6 +48,10 @@ export default function useTimer() {
   const nextReplayTargetSeconds = useRef<null | number>(null);
   // isReplay 設定是否要神經重放
   const [isReplay, setIsReplay] = useState(true);
+
+  const isProcessingEnd = useRef(false);
+
+  const { markCellAsFocused } = useFocus();
 
   // 取得隨機 180~300秒
   const getRandomReplaySeconds = () => {
@@ -98,6 +113,7 @@ export default function useTimer() {
         // useRef的值會存在 .current 中
         nextReplayTargetSeconds.current =
           fetchedTimerData.duration_seconds - getRandomReplaySeconds();
+        return fetchedTimerData.mode;
       } catch (error) {
         console.log('Failed to fetch timer:', error);
         setIsTimerRunning(false);
@@ -108,20 +124,37 @@ export default function useTimer() {
   );
   useEffect(() => {
     if (isTimerRunning && remainingSeconds === 0) {
+      // 如果已經在處理結束邏輯，就不要再進來了（防止響兩聲）
+      if (isProcessingEnd.current) return;
+
+      // 鎖上鎖頭，代表「我正在處理結束囉，其他重複的觸發請擋在門外」
+      isProcessingEnd.current = true;
+      // 如果剛剛結束的模式是 專注， 就要點亮格子
+      if (mode === 'work') {
+        // 算出目前的時間對應的格子
+        const now = new Date();
+        const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+        const currentCellId = Math.floor(currentTotalMinutes / 10);
+
+        markCellAsFocused(currentCellId);
+      }
       const nextMode = mode === 'work' ? 'rest' : 'work';
-      setTimeout(() => {
-        startNewTimer(nextMode);
-        if (finishSound && startSound) {
-          const newFinishSound = finishSound.cloneNode(true) as HTMLAudioElement;
-          const newStartSound = startSound.cloneNode(true) as HTMLAudioElement;
-          if (mode === 'work') {
-            newFinishSound.volume = 0.3;
-            newFinishSound.play();
+      setTimeout(async () => {
+        const actualNextMode = await startNewTimer(nextMode);
+
+        // 1. 判斷剛結束的是什麼，以及接下來是什麼
+        if (mode === 'work') {
+          // 專注結束了！
+          if (actualNextMode === 'long_rest') {
+            playAudio(longRestSound, 1.0); // 下一個是長休息，播長休息音效
+          } else {
+            playAudio(finishSound, 1.0); // 下一個是短休息，播一般結束音效
           }
-          if (mode === 'rest' || mode === 'long_rest') {
-            newStartSound.play();
-          }
+        } else {
+          // 休息結束了，準備開始工作
+          playAudio(startSound, 1.0);
         }
+        isProcessingEnd.current = false;
       }, 0);
       return;
     }
@@ -133,35 +166,37 @@ export default function useTimer() {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [isTimerRunning, remainingSeconds, mode, startNewTimer]);
+  }, [isTimerRunning, remainingSeconds, mode, startNewTimer, markCellAsFocused]);
 
   // toggleTimer 暫停 / 開始切換器
   const toggleTimer = async () => {
+    // 如果不是正在倒數中 (暫停中)
     if (!isTimerRunning) {
-      // 判斷是否為「全新開始」：只有歸零時才向後端拿新時間
+      // 如果時間剩餘時間 = 0 (未開始的第一次)
       if (remainingSeconds === 0) {
+        // 開啟一個新的計時器
         startNewTimer();
+        // 關閉設定panel
         setIsTimerConfigOpen(false);
-        if (startSound) {
-          const newStartSound = startSound.cloneNode(true) as HTMLAudioElement;
-          newStartSound.play();
-        }
+        // 播放開始音效
+        playAudio(startSound);
       } else {
+        // 如果時間剩餘時間 != 0 (已經不是開始第一次了)
+        // 開始倒數
         setIsTimerRunning(true);
+        // 關閉設定panel
         setIsTimerConfigOpen(false);
-        if (startSound) {
-          const newStartSound = startSound.cloneNode(true) as HTMLAudioElement;
-          newStartSound.play();
-        }
+        // 播放開始音效
+        playAudio(startSound);
       }
     } else {
+      // 如果正在倒數中
+      // 暫停倒數
       setIsTimerRunning(false);
+      // 關閉設定panel
       setIsTimerConfigOpen(false);
-      if (finishSound) {
-        const newFinishSound = finishSound.cloneNode(true) as HTMLAudioElement;
-        newFinishSound.volume = 0.3;
-        newFinishSound.play();
-      }
+      // 播放暫停音效
+      playAudio(finishSound);
     }
   };
   // resetTimer 長按重置 計時器
