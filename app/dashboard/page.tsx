@@ -1,20 +1,13 @@
 'use client';
 
-import BackgroundVideo from '@/components/Layout/BackgroundVideo';
-import useTimer from '@/hooks/useTimer';
-import FocusBoard from '@/components/Layout/FocusBoard';
-import useVideoController from '@/hooks/useVideoController';
-import PersonalDashboard from '@/components/Layout/PersonalDashboard';
+import NavBar from '@/components/NavBar/NavBar';
+import DashboardContent from '@/components/Layout/DashboardContent';
 
 export default function Page() {
-  const timer = useTimer();
-  const video = useVideoController();
-
   return (
-    <div className="relative max-h-screen min-h-screen grid grid-cols-2 overflow-hidden">
-      <FocusBoard {...timer} {...video} />
-      <PersonalDashboard />
-      <BackgroundVideo {...video} />
+    <div className="flex flex-col h-screen overflow-hidden bg-[#0a0e17] ">
+      <NavBar />
+      <DashboardContent />
     </div>
   );
 }

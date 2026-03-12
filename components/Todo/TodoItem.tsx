@@ -1,3 +1,11 @@
+import { Check, Pencil, Square, SquareCheck, Trash2, TreePine, X } from 'lucide-react';
+import { iconOptions } from './iconConstants';
+import { useEffect, useRef, useState } from 'react';
+import PalettePanel from './PalettePanel';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import ActionIconButton from '../UI/ActionIconButton';
+
 interface Props {
   TodoItemTitle: string;
   onDeleteTodo: (id: string) => void;
@@ -13,14 +21,6 @@ interface Props {
   className?: string;
 }
 
-import { Check, Circle, CircleCheck, Pencil, Trash2, TreePine, X } from 'lucide-react';
-import ActionIconButton from '../UI/ActionIconButton';
-import { iconOptions } from './iconConstants';
-import { useEffect, useRef, useState } from 'react';
-import PalettePanel from './PalettePanel';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-
 export default function TodoItem({
   TodoItemTitle,
   onDeleteTodo,
@@ -32,61 +32,47 @@ export default function TodoItem({
   onUpdateTodo,
   className,
 }: Props) {
-  const size = 30;
-  // 從iconOptions 中找到 名字等於 icon的
   const matchedIconConfig = iconOptions.find((item) => item.name === TodoItemIcon);
-  // 如果有選的話就用選的，如果沒有就用預設的 樹
   const TodoIcon = matchedIconConfig ? matchedIconConfig.icon : TreePine;
-  // 用來記錄現在是否是編輯模式
+
   const [isEditModeActive, setIsEditModeActive] = useState(false);
-  // 用來暫存使用者修改的title
   const [editTitleBuffer, setEditTitleBuffer] = useState(TodoItemTitle);
-  // isOpenPalettePanel 用來判斷開啟 panel
   const [isOpenPalettePanel, setIsOpenPalettePanel] = useState(false);
-  // 用來監聽 input 的 Ref
   const inputRef = useRef<HTMLInputElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isEditModeActive && inputRef.current) {
-      // 聚焦輸入框
       inputRef.current.focus();
-      // 選取內容
       inputRef.current.select();
     }
   }, [isEditModeActive]);
 
-  // 從 Hook 中解構出需要的零件
-  const {
-    setNodeRef, // 告訴系統誰要動
-    attributes, // 讓系統辨識這是拖拉中的零件
-    listeners, // 等待滑鼠的命令
-    transform, // 即時座標
-    transition, // 過渡動畫
-    isDragging, //是否正在被抓取中
-  } = useSortable({ id: id });
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isOpenPalettePanel && itemRef.current && !itemRef.current.contains(e.target as Node)) {
+        setIsOpenPalettePanel(false);
+      }
+    };
+    if (isOpenPalettePanel) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpenPalettePanel]);
 
-  // 把座標的數字轉換成字串
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    id: id,
+  });
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: transition,
   };
 
-  // 用來監聽 panel
-  const itemRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (isOpenPalettePanel && itemRef.current) {
-        if (!itemRef.current.contains(e.target as Node)) {
-          setIsOpenPalettePanel(false);
-        }
-      }
-    };
-    if (isOpenPalettePanel) {
-      document.addEventListener('mousedown', handleClickOutside);
+  const saveEdit = () => {
+    if (editTitleBuffer.trim() !== '') {
+      onUpdateTodo(id, { title: editTitleBuffer.trim() });
+      setIsEditModeActive(false);
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpenPalettePanel]);
+  };
 
   return (
     <div
@@ -97,91 +83,98 @@ export default function TodoItem({
       style={style}
       {...attributes}
       {...listeners}
-      className={`${isDragging ? 'opacity-0' : ''} flex gap-5 items-center border-b-2 min-w-100 pb-1 w-full mt-1 px-3 bg-amber-300 rounded-2xl hover:cursor-pointer ${className}`}
+      // 科技風卡片樣式：group 用來控制內部按鈕的 hover 顯示
+      className={`group flex gap-3 items-center w-full p-3 mb-2 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 hover:border-white/10 transition-all cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 border-[#ffb347] border-dashed' : ''} ${className}`}
     >
-      <ActionIconButton className="shrink-0" onClick={() => onToggleTodo(id)}>
-        {isFinished ? <CircleCheck size={size} /> : <Circle size={size} />}
-      </ActionIconButton>
-      {isEditModeActive ? (
-        <input
-          ref={inputRef}
-          value={editTitleBuffer}
-          onChange={(e) => {
-            setEditTitleBuffer(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              if (editTitleBuffer !== '') {
-                onUpdateTodo(id, { title: editTitleBuffer });
-                setIsEditModeActive(false);
-              }
-            }
-            if (e.key === 'Escape') {
-              setIsEditModeActive(false);
-            }
-          }}
-          className="text-xl flex-1  wrap-break-word min-w-0 my-1 bg-gray-200 rounded-2xl text-center"
-          placeholder={`${TodoItemTitle}`}
-        />
-      ) : (
-        <span
-          className={`text-xl flex-1  wrap-break-word min-w-0 py-1 ${isFinished ? 'line-through opacity-60' : ''}`}
-          title={`${TodoItemTitle}`}
+      {/* 左側：圖示 (點擊可開啟調色盤，但要阻擋事件冒泡避免觸發拖曳) */}
+      <div className="relative shrink-0" onPointerDown={(e) => e.stopPropagation()}>
+        <ActionIconButton
+          onClick={() => setIsOpenPalettePanel(!isOpenPalettePanel)}
+          className={`p-2 rounded-lg bg-black/20 hover:bg-black/40 transition-colors ${isFinished ? 'opacity-40' : ''}`}
         >
-          {TodoItemTitle}
-        </span>
-      )}
-
-      <div className="flex shrink-0">
-        {isEditModeActive ? (
-          <div className="flex gap-3">
-            <ActionIconButton
-              onClick={() => {
-                if (editTitleBuffer !== '') {
-                  onUpdateTodo(id, { title: editTitleBuffer });
-                  setIsEditModeActive(false);
-                }
-              }}
-            >
-              <Check className="text-green-700 hover:scale-120" size={size} />
-            </ActionIconButton>
-            <ActionIconButton
-              onClick={() => {
-                setIsEditModeActive(false);
-              }}
-            >
-              <X className="text-red-500 hover:scale-120" size={size} />
-            </ActionIconButton>
-          </div>
-        ) : (
-          <ActionIconButton
-            onClick={() => {
-              setIsEditModeActive(!isEditModeActive);
-            }}
-          >
-            <Pencil className=" hover:scale-120" size={size} />
-          </ActionIconButton>
+          <TodoIcon size={18} className={`${TodoItemColor}`} />
+        </ActionIconButton>
+        {isOpenPalettePanel && (
+          <PalettePanel
+            currentColor={TodoItemColor}
+            onColorSelect={(color) => onUpdateTodo(id, { color })}
+            onIconSelect={(icon) => onUpdateTodo(id, { icon_name: icon })}
+            className="top-10 left-0"
+          />
         )}
       </div>
-      <ActionIconButton onClick={() => setIsOpenPalettePanel(!isOpenPalettePanel)}>
-        <TodoIcon size={size} className={` hover:scale-120 ${TodoItemColor}`} />
-      </ActionIconButton>
-      {isOpenPalettePanel && (
-        <PalettePanel
-          currentColor={TodoItemColor}
-          onColorSelect={(selectedColor) => {
-            onUpdateTodo(id, { color: selectedColor });
-          }}
-          onIconSelect={(selectedIcon) => {
-            onUpdateTodo(id, { icon_name: selectedIcon });
-          }}
-        />
-      )}
 
-      <ActionIconButton className="pr-5" onClick={() => onDeleteTodo(id)}>
-        <Trash2 size={size} className="text-red-500  hover:scale-120" />
-      </ActionIconButton>
+      {/* 中間：標題與輸入框 */}
+      <div
+        className="flex-1 min-w-0"
+        onPointerDown={(e) => isEditModeActive && e.stopPropagation()}
+      >
+        {isEditModeActive ? (
+          <input
+            ref={inputRef}
+            value={editTitleBuffer}
+            onChange={(e) => setEditTitleBuffer(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') saveEdit();
+              if (e.key === 'Escape') setIsEditModeActive(false);
+            }}
+            className="w-full bg-black/50 text-slate-200 text-sm rounded px-2 py-1 outline-none border border-[#ffb347]/50"
+          />
+        ) : (
+          <span
+            className={`block truncate text-sm font-medium ${isFinished ? 'line-through text-slate-500' : 'text-slate-200'}`}
+          >
+            {TodoItemTitle}
+          </span>
+        )}
+      </div>
+
+      {/* 右側：編輯/刪除按鈕 (平時隱藏，Hover 顯示) + 打勾按鈕 */}
+      <div className="flex items-center gap-1 shrink-0" onPointerDown={(e) => e.stopPropagation()}>
+        {isEditModeActive ? (
+          <>
+            <ActionIconButton
+              onClick={saveEdit}
+              className="p-1.5 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors"
+            >
+              <Check size={16} />
+            </ActionIconButton>
+            <button
+              onClick={() => setIsEditModeActive(false)}
+              className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </>
+        ) : (
+          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1 mr-2">
+            <ActionIconButton
+              onClick={() => setIsEditModeActive(true)}
+              className="p-1.5 text-slate-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <Pencil size={14} />
+            </ActionIconButton>
+            <ActionIconButton
+              onClick={() => onDeleteTodo(id)}
+              className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+            >
+              <Trash2 size={14} />
+            </ActionIconButton>
+          </div>
+        )}
+
+        {/* 狀態切換按鈕 (設計稿中的方形 Checkbox) */}
+        <ActionIconButton
+          onClick={() => onToggleTodo(id)}
+          className="p-1 hover:scale-110 transition-transform"
+        >
+          {isFinished ? (
+            <SquareCheck size={20} className="text-[#ffb347]" />
+          ) : (
+            <Square size={20} className="text-slate-600 hover:text-slate-400" />
+          )}
+        </ActionIconButton>
+      </div>
     </div>
   );
 }

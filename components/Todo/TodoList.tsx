@@ -217,36 +217,54 @@ export default function TodoList() {
     setActiveId(null);
   };
 
+  // ... 上方的 hooks, handles, sensors 邏輯通通保留 ...
+
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-    >
-      <DragOverlay>
-        {activeId && activeTodo ? (
-          <div className="opacity-90 scale-105 rotate-2 shadow-2xl transition-transform">
-            <TodoItem
-              id={activeTodo.id}
-              isFinished={activeTodo.isFinished}
-              TodoItemTitle={activeTodo.title}
-              TodoItemColor={activeTodo.color}
-              TodoItemIcon={activeTodo.icon_name}
-              // 由於不需要互動，所以傳入空函式
-              onUpdateTodo={() => {}}
-              onDeleteTodo={() => {}}
-              onToggleTodo={() => {}}
-              className={activeTodo.isFinished ? 'bg-gray-600' : ''}
-            />
-          </div>
-        ) : null}
-      </DragOverlay>
-      <div className="relative bg-teal-100/80 mt-5 mx-10 px-10 flex flex-col justify-center items-center h-fit rounded-2xl z-10 ">
-        <TodoInput onAddTodo={handleAddTodo} />
+    // 1. 最外層的容器：套用科技風外框
+    <div className="flex flex-col h-full bg-white/5 border border-white/10 rounded-3xl p-6 overflow-hidden">
+      {/* 標題 */}
+      <h3 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-4 shrink-0">
+        深度工作任務
+      </h3>
+
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+      >
+        {/* 影子效果 */}
+        <DragOverlay>
+          {activeId && activeTodo ? (
+            <div className="opacity-90 scale-105 rotate-2 shadow-2xl transition-transform">
+              <TodoItem
+                id={activeTodo.id}
+                isFinished={activeTodo.isFinished}
+                TodoItemTitle={activeTodo.title}
+                TodoItemColor={activeTodo.color}
+                TodoItemIcon={activeTodo.icon_name}
+                onUpdateTodo={() => {}}
+                onDeleteTodo={() => {}}
+                onToggleTodo={() => {}}
+                className={
+                  activeTodo.isFinished
+                    ? 'opacity-50 grayscale'
+                    : 'border-[#ffb347]/50 shadow-[0_0_15px_rgba(255,179,71,0.2)]'
+                }
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
+
+        {/* 2. 輸入區塊 */}
+        <div className="shrink-0 mb-4">
+          <TodoInput onAddTodo={handleAddTodo} />
+        </div>
+
+        {/* 3. 清單滾動區塊 */}
         {isMounted && (
-          <div className=" flex flex-col gap-3 overflow-y-auto overflow-x-hidden max-h-[30vh] flex-1 w-full pb-2 ">
+          <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar pr-2 pb-2">
             <DroppableBasket id="activeBasket">
               <SortableContext items={activeItems}>
                 {activeItems.map((todo) => (
@@ -264,12 +282,23 @@ export default function TodoList() {
                 ))}
               </SortableContext>
             </DroppableBasket>
-            <div className="shrink-0 h-px bg-black my-1 w-full" />
+
+            {/* 完成與未完成的分界線 */}
+            {completedItems.length > 0 && (
+              <div className="shrink-0 flex items-center gap-4 my-4 opacity-50">
+                <div className="h-px flex-1 bg-white/10" />
+                <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">
+                  已完成
+                </span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+            )}
+
             <DroppableBasket id="completedBasket">
               <SortableContext items={completedItems}>
                 {completedItems.map((todo) => (
                   <TodoItem
-                    className="bg-gray-600"
+                    className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" // 已完成的項目變暗
                     onUpdateTodo={handleUpdateTodo}
                     key={todo.id}
                     TodoItemTitle={todo.title}
@@ -285,7 +314,7 @@ export default function TodoList() {
             </DroppableBasket>
           </div>
         )}
-      </div>
-    </DndContext>
+      </DndContext>
+    </div>
   );
 }

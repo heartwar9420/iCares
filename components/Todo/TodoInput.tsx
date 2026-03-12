@@ -1,63 +1,67 @@
 import ActionIconButton from '../UI/ActionIconButton';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { iconOptions } from './iconConstants';
-import { SquareArrowRightExit, SquareCheck, TreePine } from 'lucide-react';
+import { Plus, TreePine } from 'lucide-react';
 import PalettePanel from './PalettePanel';
 
 interface Props {
-  // 接收 title = string ， 但不用回傳
   onAddTodo: (title: string, icon_name: string, color: string) => void;
 }
 
 export default function TodoInput({ onAddTodo }: Props) {
-  const size = 36;
   const [todoTitleDraft, setTodoTitleDraft] = useState<string>('');
-  // isPaletteOpen 用來顯示調色盤是否開啟
+
+  // 狀態與預設值
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
-  // currentColor 用來顯示目前被選擇的顏色
-  const [currentColor, setCurrentColor] = useState<string>('text-green-500');
-  // currentIconKey 用來顯示目前被選擇的圖標
+  const [currentColor, setCurrentColor] = useState<string>('text-[#ffb347]');
   const [currentIconKey, setCurrentIconKey] = useState<string>('TreePine');
-  // 從iconOptions 中找到 名字等於 icon的
+
   const matchedIconConfig = iconOptions.find((item) => item.name === currentIconKey);
-  // 如果有選的話就用選的，如果沒有就用預設的 樹
   const IconPreview = matchedIconConfig ? matchedIconConfig.icon : TreePine;
 
+  // 🔥 新增：用來偵測「點擊外部」的 Ref
+  const paletteContainerRef = useRef<HTMLDivElement>(null);
+
+  // 🔥 新增：點擊外部自動關閉面板的邏輯
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        isPaletteOpen &&
+        paletteContainerRef.current &&
+        !paletteContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsPaletteOpen(false);
+      }
+    };
+    if (isPaletteOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isPaletteOpen]);
+
+  // 新增任務的邏輯
+  const handleAdd = () => {
+    if (todoTitleDraft.trim() !== '') {
+      onAddTodo(todoTitleDraft.trim(), currentIconKey, currentColor);
+      setTodoTitleDraft('');
+      setIsPaletteOpen(false); // 新增完畢後，貼心地幫使用者關閉面板
+    }
+  };
+
   return (
-    <div className="flex w-full gap-3 py-3 relative items-center">
-      <ActionIconButton>
-        <SquareArrowRightExit size={size} />
-      </ActionIconButton>
-      <textarea
-        className="flex flex-1 py-2 bg-amber-100/70 rounded-2xl border-2 border-transparent text-center outline-none resize-none hover:border-2 hover:border-red-200 focus:border-red-400 placeholder:text-blue-950"
-        placeholder="請輸入待完成的事項"
-        rows={1}
-        onChange={(e) => setTodoTitleDraft(e.target.value)}
-        value={todoTitleDraft}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (todoTitleDraft !== '') {
-              onAddTodo(todoTitleDraft, currentIconKey, currentColor);
-              setTodoTitleDraft('');
-            }
-          }
-          if (e.key === 'Escape') {
-            setTodoTitleDraft('');
-          }
-        }}
-      />
-      <div
-        className="relative"
-        onMouseEnter={() => {
-          setIsPaletteOpen(true);
-        }}
-        onMouseLeave={() => {
-          setIsPaletteOpen(false);
-        }}
-      >
-        <ActionIconButton className="flex">
-          <IconPreview size={size} className={`${currentColor}`} />
+    <div className="flex w-full gap-3 py-3 relative items-center mb-2">
+      {/* 圖示與顏色選擇器 (掛上 Ref 供外部點擊偵測使用) */}
+      <div className="relative" ref={paletteContainerRef}>
+        <ActionIconButton
+          // 🔥 拔掉原本的 onMouseEnter/Leave，改成點擊切換狀態
+          onClick={() => setIsPaletteOpen(!isPaletteOpen)}
+          className={`flex items-center justify-center p-2.5 border rounded-xl transition-colors ${
+            isPaletteOpen
+              ? 'bg-white/10 border-white/20'
+              : 'bg-white/5 border-white/10 hover:bg-white/10'
+          }`}
+        >
+          <IconPreview size={20} className={`${currentColor}`} />
         </ActionIconButton>
 
         {isPaletteOpen && (
@@ -69,15 +73,28 @@ export default function TodoInput({ onAddTodo }: Props) {
         )}
       </div>
 
-      <ActionIconButton
-        onClick={() => {
-          if (todoTitleDraft !== '') {
-            onAddTodo(todoTitleDraft, currentIconKey, currentColor);
-            setTodoTitleDraft('');
+      {/* 輸入框 */}
+      <input
+        className="flex-1 py-2.5 px-4 bg-black/30 text-sm text-slate-200 placeholder:text-slate-500 rounded-xl border border-white/10 outline-none transition-all focus:border-[#ffb347]/50 focus:bg-black/50"
+        placeholder="新增深度工作任務..."
+        onChange={(e) => setTodoTitleDraft(e.target.value)}
+        value={todoTitleDraft}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAdd();
           }
+          if (e.key === 'Escape') setTodoTitleDraft('');
         }}
+      />
+
+      {/* 新增按鈕 */}
+      <ActionIconButton
+        onClick={handleAdd}
+        disabled={!todoTitleDraft.trim()}
+        className="p-2.5 bg-[#ffb347]/10 text-[#ffb347] border border-[#ffb347]/20 rounded-xl hover:bg-[#ffb347]/20 disabled:opacity-30 disabled:hover:bg-[#ffb347]/10 transition-colors"
       >
-        <SquareCheck size={size} />
+        <Plus size={20} />
       </ActionIconButton>
     </div>
   );

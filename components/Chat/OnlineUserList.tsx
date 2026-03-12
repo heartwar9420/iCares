@@ -1,54 +1,71 @@
+'use client';
+
 import { useState } from 'react';
-import OnlineUserCounting from './OnlineUserCounting';
-import OnlineUserStatus from './OnlineUserStatus';
-import StatusSelector from './StatusSelector';
+import { User } from 'lucide-react';
 
 export interface UserStatus {
   id: string;
   name: string;
-  isConnected: boolean; // 是否上線？
-  privacyMode: 'Public' | 'Hidden'; // 是否公開？
-  autoStatus: '專注中' | '休息中' | '長休息中' | '閒置中'; // 自動切換狀態
+  isConnected: boolean;
+  privacyMode: 'Public' | 'Hidden';
+  autoStatus: '專注中' | '閒置中' | '離線中';
 }
 
-// 假資料
-export const FAKE_USERS: UserStatus[] = [
+const FAKE_USERS: UserStatus[] = [
   { id: '1', name: '小飯', isConnected: true, privacyMode: 'Public', autoStatus: '專注中' },
-  { id: '2', name: '小糖', isConnected: true, privacyMode: 'Public', autoStatus: '休息中' },
-  { id: '3', name: '小斑', isConnected: false, privacyMode: 'Public', autoStatus: '閒置中' },
-  { id: '4', name: '你行Nissan啊', isConnected: true, privacyMode: 'Hidden', autoStatus: '專注中' },
-  { id: '5', name: 'Me', isConnected: true, privacyMode: 'Public', autoStatus: '閒置中' },
+  { id: '2', name: '小糖', isConnected: true, privacyMode: 'Public', autoStatus: '專注中' },
+  { id: '3', name: '小斑', isConnected: false, privacyMode: 'Public', autoStatus: '離線中' },
+  { id: '4', name: '你行Nissan啊', isConnected: true, privacyMode: 'Hidden', autoStatus: '離線中' },
+  { id: '5', name: 'Me', isConnected: true, privacyMode: 'Public', autoStatus: '專注中' },
+  { id: '6', name: '小6', isConnected: true, privacyMode: 'Public', autoStatus: '專注中' },
+  { id: '7', name: '小7', isConnected: true, privacyMode: 'Public', autoStatus: '專注中' },
+  { id: '8', name: '小8', isConnected: false, privacyMode: 'Public', autoStatus: '離線中' },
 ];
 
 export default function OnlineUserList() {
-  const [userList, setUserList] = useState(FAKE_USERS);
-  const onlineCount = userList.filter(
-    (user) => user.isConnected && user.privacyMode === 'Public',
-  ).length;
-
-  const handleMyStatusChange = (newPrivacyMode: 'Public' | 'Hidden', newIsConnected: boolean) => {
-    const updatedList = userList.map((user) => {
-      if (user.id === '5')
-        return {
-          ...user,
-          privacyMode: newPrivacyMode,
-          isConnected: newIsConnected,
-        };
-      return user;
-    });
-    setUserList(updatedList);
-  };
+  const [userList] = useState(FAKE_USERS);
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden rounded-2xl">
-      <div className="">
-        <OnlineUserCounting onlineCount={onlineCount} />
-      </div>
-      <div className="flex flex-1 w-full">
-        <OnlineUserStatus users={userList} />
-      </div>
-      <div className="">
-        <StatusSelector onStatusChange={handleMyStatusChange} />
+    <div className="flex flex-col h-full w-full rounded-3xl">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
+        {userList.map((user) => {
+          const isVisible = user.isConnected && user.privacyMode === 'Public';
+
+          return (
+            <div
+              key={user.id}
+              className={`flex items-center p-3 rounded-2xl cursor-pointer transition-all
+                ${isVisible ? 'hover:bg-white/5' : 'opacity-80 hover:bg-white/5'}`}
+            >
+              <div className="relative shrink-0 mr-4">
+                {/* 大頭貼 */}
+                <div
+                  className={`p-3 rounded-full border border-white/10 ${isVisible ? 'bg-white/10' : 'bg-white/8'}`}
+                >
+                  <User size={24} className={isVisible ? 'text-slate-300' : 'text-slate-500'} />
+                </div>
+                {/* 上線綠點 */}
+                {isVisible && (
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#0a0e17] rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+                )}
+              </div>
+              {/* 名字 */}
+              <div className="flex flex-col">
+                <span
+                  className={`text-base font-medium tracking-wide ${isVisible ? 'text-slate-100' : 'text-slate-500'}`}
+                >
+                  {user.name}
+                </span>
+                {/* 狀態 */}
+                <div
+                  className={`rounded text-sm py-1 transition-all text-slate-400 ${isVisible ? 'text-slate-200' : 'text-slate-500'}`}
+                >
+                  {user.autoStatus}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

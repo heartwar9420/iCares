@@ -91,9 +91,9 @@ export const colorOptions = [
   },
   {
     name: 'Midnight black',
-    bgColor: 'bg-slate-800',
-    textColor: 'text-slate-800',
-    focusColor: 'focus:bg-slate-800/70',
+    bgColor: 'bg-slate-300',
+    textColor: 'text-slate-300',
+    focusColor: 'focus:bg-slate-300/70',
   },
   {
     name: 'Apple Red',
@@ -124,5 +124,17 @@ export const colorOptions = [
     bgColor: 'bg-violet-400',
     textColor: 'text-violet-400',
     focusColor: 'focus:bg-violet-400/70',
+  },
+  {
+    name: 'Neon Indigo',
+    bgColor: 'bg-indigo-400',
+    textColor: 'text-indigo-400',
+    focusColor: 'focus:bg-indigo-400/70',
+  },
+  {
+    name: 'Electric Yellow',
+    bgColor: 'bg-yellow-400',
+    textColor: 'text-yellow-400',
+    focusColor: 'focus:bg-yellow-400/70',
   },
 ];

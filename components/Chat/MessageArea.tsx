@@ -2,74 +2,78 @@ import { useState, useEffect, useRef } from 'react';
 import MessageHistory from './MessageHistory';
 import MessageInput from './MessageInput';
 
-export interface ChatMessage {
-  id: string; // id(key)
-  sender: string; // 發送者
-  content: string; // 內容
-  timestamp: string; // 發送時間
+interface Props {
+  onNewMessage?: () => void;
+  shouldFocus?: boolean;
 }
 
-export default function MessageArea() {
-  // 用來存放歷史訊息的陣列
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  content: string;
+  timestamp: string;
+}
+
+export default function MessageArea({ onNewMessage, shouldFocus }: Props) {
   const [messageHistoryList, setMessageHistoryList] = useState<ChatMessage[]>([]);
-
-  // 建立一個 Ref 讓他不會被 React 畫面更新打斷 ，用來放和伺服器的連線
-  // 預設 這個 reference 的 current 只能接受 WebSocket 或是 null 且預設是 null
   const webSocketReference = useRef<WebSocket | null>(null);
-
-  // 建立當前使用者的身份狀態
   const [currentUserName] = useState<string>('Me');
 
   useEffect(() => {
-    // 1. 從環境變數抓出目前的 API 網址 (如果沒有，預設退回本機端網址)
     const baseApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-    // 2. 將 http 替換為 ws，https 替換為 wss，並接上 chat 的路由
+    // replace = 字串替換, /^http/ = 正規表達式 , / / = 開始和結束
+    // ^ =從字串的最開頭比對, http = 要找的文字 'ws' = 要替換成的文字
+    // 這一行 = 把 http://localhost:8000 替換成 ws://localhost:8000
     const webSocketUrl = baseApiUrl.replace(/^http/, 'ws') + '/api/chat';
 
-    // 3. 建立連線 (使用轉換後的新網址)
+    // 建立一個真正的 WebSocket 連線實例
     const serverConnection = new WebSocket(webSocketUrl);
 
+    // 將連線實例存入 useRef 中 ， 這樣在 useEffect 以外也能呼叫(發送訊息)
     webSocketReference.current = serverConnection;
 
-    // 如果連線成功 就console一個訊息出來
+    // 成功連線時 console 成功訊息
     serverConnection.onopen = () => {
-      console.log('已連線到伺服器');
+      console.log('已連線到聊天伺服器');
     };
 
-    webSocketReference.current = serverConnection;
-    // 如果連線成功 就console一個訊息出來
-    serverConnection.onopen = () => {
-      console.log('已連線到伺服器');
-    };
-    // 如果有新訊息 就把他加到 messageHistoryList 中
+    // 當收到新訊息時觸發
     serverConnection.onmessage = (incomingEvent) => {
+      // 把後端傳來的 JSON 格式 解析成 JS 物件
       const parsedData = JSON.parse(incomingEvent.data);
 
+      // 把解析好的資料包裝成前端定義的 ChatMessage 格式
       const newMessage: ChatMessage = {
-        id: crypto.randomUUID(), // 生成一個隨機的 ID
-        // 從後端傳來的 Data 中取出我們要的資料
+        id: crypto.randomUUID(),
         sender: parsedData.sender,
         content: parsedData.content,
         timestamp: parsedData.timestamp,
       };
-      // 拷貝一份舊陣列 裝入 新的陣列中，並且把新訊息接在新陣列的最後面
+
+      // 使用 Functional Update 更新狀態，確保拿到最新的訊息列表 且 把新訊息放到最後面
       setMessageHistoryList((prev) => [...prev, newMessage]);
+
+      // 當收到新訊息時，觸發通知函式！
+      if (onNewMessage) {
+        onNewMessage();
+      }
     };
-    // 結束後把伺服器連線關閉
+
+    // 結束後就把連線關掉
     return () => {
       serverConnection.close();
     };
-  }, []);
+  }, [onNewMessage]);
 
-  // 用來接收訊息的函式
   const handleSendMessage = (newContent: string) => {
-    // 確定目前和伺服器有連線中 且 伺服器已經準備完畢，再 send 新訊息給伺服器
+    // 確認 WebSocket 實例存在 且 連線狀態是 OPEN
     if (webSocketReference.current && webSocketReference.current.readyState === WebSocket.OPEN) {
+      // 把要傳送的傳訊打包成一個物件
       const outgoingPayload = {
         sender: currentUserName,
         content: newContent,
       };
+      // 把打包好的物件 轉成字串後 傳送出去
       webSocketReference.current.send(JSON.stringify(outgoingPayload));
     } else {
       console.warn('連線尚未完成，請稍後再試');
@@ -77,12 +81,20 @@ export default function MessageArea() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full rounded-2xl overflow-hidden">
-      <div className="flex flex-1 min-h-0 overflow-y-auto bg-yellow-400">
+    <div className="flex flex-col h-full w-full rounded-3xl bg-white/5 border border-white/10 overflow-hidden">
+      {/* 標題列 */}
+      <div className="shrink-0 p-4 bg-black/20 flex items-center justify-between">
+        <div className="text-sm font-bold tracking-widest text-slate-400">FOCUS CHAT</div>
+      </div>
+
+      {/* 歷史訊息 */}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4">
         <MessageHistory messageHistoryList={messageHistoryList} currentUserName={currentUserName} />
       </div>
-      <div className="flex shrink-0">
-        <MessageInput onSendMessage={handleSendMessage} />
+
+      {/* 輸入框 */}
+      <div className="shrink-0 p-4 bg-black/20 ">
+        <MessageInput onSendMessage={handleSendMessage} shouldFocus={shouldFocus} />
       </div>
     </div>
   );

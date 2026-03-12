@@ -15,30 +15,32 @@ export default function PalettePanel({
 }: PalettePanelProps) {
   return (
     <div
-      className={`absolute flex flex-col top-full right-0 rounded-2xl overflow-hidden text-center justify-center bg-amber-50 z-10 ${className}`}
+      className={`absolute flex flex-col top-full mt-2 left-0 w-64 rounded-2xl overflow-hidden border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] bg-[#161b26]/95 backdrop-blur-xl z-50 ${className}`}
     >
-      <div className="flex">
+      {/* 顏色選擇區 */}
+      <div className="flex flex-wrap p-3 gap-2 justify-center bg-black/20">
         {colorOptions.map((color_config) => (
           <button
-            onClick={() => onColorSelect(color_config.textColor)}
             key={color_config.name}
-            className={`flex p-5 hover:bg-slate-100 ${color_config.focusColor}`}
+            onClick={() => onColorSelect(color_config.textColor)}
+            className="p-1 rounded-full hover:scale-110 transition-transform focus:outline-none"
           >
-            <div className={`w-5 h-5 rounded-full ${color_config.bgColor}`}></div>
+            <div className={`w-5 h-5 rounded-full shadow-inner ${color_config.bgColor}`}></div>
           </button>
         ))}
       </div>
-      <div className="h-1 bg-slate-200" />
-      <div className="grid grid-cols-10">
+
+      <div className="h-px w-full bg-white/5" />
+
+      {/* 圖示選擇區 */}
+      <div className="grid grid-cols-6 gap-1 p-3 max-h-48 overflow-y-auto custom-scrollbar">
         {iconOptions.map((icon_config) => (
           <button
             key={icon_config.name}
-            className={
-              'flex justify-center hover:bg-slate-100 focus:bg-slate-300 p-1 rounded-2xl m-1'
-            }
+            className="flex justify-center items-center aspect-square rounded-xl hover:bg-white/10 transition-colors focus:bg-white/20"
             onClick={() => onIconSelect(icon_config.name)}
           >
-            <icon_config.icon size={32} className={`${currentColor}`} />
+            <icon_config.icon size={20} className={`${currentColor}`} />
           </button>
         ))}
       </div>

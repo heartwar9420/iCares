@@ -7,42 +7,52 @@ interface Props {
 }
 
 export default function MessageHistory({ messageHistoryList, currentUserName }: Props) {
-  // 建立一個 Ref 來抓畫面最底部的聊天訊息 , 只能接受 HTMLDivElement 或 null 預設是 null
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // 如果每次有新訊息就執行裡面的滾動指令
+  // 如果有新的訊息就自動滑動到底
   useEffect(() => {
     if (messagesEndRef.current) {
-      // smooth = 捲動動畫
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messageHistoryList]);
-  return (
-    <div className="flex flex-col w-full">
-      <div>
-        {messageHistoryList.length === 0 ? (
-          <div className="p-2">目前沒有訊息，來說點什麼吧</div>
-        ) : (
-          messageHistoryList.map((messageText) => {
-            const isMyMessage = messageText.sender === currentUserName;
-            return (
-              <div
-                key={messageText.id}
-                className={`hover:bg-slate-400 rounded-xl p-2 flex flex-col ${isMyMessage ? 'items-end' : 'items-start'}`}
-              >
-                <div className="w-fit rounded-2xl flex ">
-                  <div className="text-xl mr-3 text-black">{messageText.sender}</div>
-                  <div className="text-[14px] text-gray-500 mt-1">{messageText.timestamp}</div>
-                </div>
 
-                <div className="text-xl text-gray-600">{messageText.content}</div>
+  return (
+    <div className="flex flex-col w-full gap-4">
+      {messageHistoryList.length === 0 ? (
+        <div className="flex items-center justify-center h-full text-sm text-slate-400 mt-10">
+          目前沒有訊息，來打個招呼吧！
+        </div>
+      ) : (
+        messageHistoryList.map((messageText) => {
+          const isMyMessage = messageText.sender === currentUserName;
+          return (
+            <div
+              key={messageText.id}
+              className={`flex flex-col w-full ${isMyMessage ? 'items-end' : 'items-start'}`}
+            >
+              {/* 名字與時間 */}
+              <div
+                className={`flex items-baseline gap-2 mb-1 px-1 ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}
+              >
+                <span className="text-lg text-slate-400">{messageText.sender}</span>
+                <span className="text-sm text-slate-600">{messageText.timestamp}</span>
               </div>
-            );
-          })
-        )}
-        {/* 把聊天的標記點設在這 只要有新訊息 就會自動捲動*/}
-        <div ref={messagesEndRef} />
-      </div>
+
+              {/* 對話氣泡本體 */}
+              <div
+                className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm leading-relaxed wrap-break-word ${
+                  isMyMessage
+                    ? 'bg-[#ffb347]/10 border border-[#ffb347]/30 text-[#ffb347] rounded-tr-sm'
+                    : 'bg-white/5 border border-white/10 text-slate-200 rounded-tl-sm'
+                }`}
+              >
+                {messageText.content}
+              </div>
+            </div>
+          );
+        })
+      )}
+      <div ref={messagesEndRef} />
     </div>
   );
 }

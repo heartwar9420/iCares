@@ -38,8 +38,6 @@ export default function useTimer() {
   const [isCustomMode, setIsCustomMode] = useState(false);
   // 設定計時設定頁面是否開啟
   const [isTimerConfigOpen, setIsTimerConfigOpen] = useState(false);
-  // 用來記錄使用者的原始設定
-  const [originTimerMode, setOriginTimerMode] = useState<BackupData>();
   // timerCombo 用來記錄現在使用者選擇的 方案為何
   const [timerCombo, setTimerCombo] = useState<
     'iCares' | 'Immersion' | 'TomatoClock' | 'CustomCombo'
@@ -167,6 +165,59 @@ export default function useTimer() {
 
     return () => clearInterval(intervalId);
   }, [isTimerRunning, remainingSeconds, mode, startNewTimer, markCellAsFocused]);
+  // 網頁初次載入時，讀取 localStorage 的紀錄
+  useEffect(() => {
+    // 確保只在瀏覽器端執行
+    if (typeof window !== 'undefined') {
+      // 🔥 加上 setTimeout，將狀態更新推遲到下一個事件循環，完美避開 React 的同步渲染警告
+      const initTimer = setTimeout(() => {
+        const lastMode = localStorage.getItem('icares_last_mode') as
+          | 'iCares'
+          | 'Immersion'
+          | 'TomatoClock'
+          | 'CustomCombo'
+          | null;
+
+        if (lastMode) {
+          setTimerCombo(lastMode);
+
+          if (lastMode === 'CustomCombo') {
+            const savedConfig = localStorage.getItem('icares_custom_config');
+            const savedReplay = localStorage.getItem('icares_custom_replay');
+            if (savedConfig) setTimerDurationConfigs(JSON.parse(savedConfig));
+            if (savedReplay) setIsReplay(JSON.parse(savedReplay));
+          } else if (lastMode === 'TomatoClock') {
+            setTimerDurationConfigs({
+              work_time_minutes: 20,
+              short_rest_time_seconds: 300,
+              long_rest_time_minutes: 30,
+              rounds_to_long_rest: 4,
+            });
+            setIsReplay(false);
+          } else if (lastMode === 'Immersion') {
+            setTimerDurationConfigs({
+              work_time_minutes: 0.1,
+              short_rest_time_seconds: 3,
+              long_rest_time_minutes: 0.1,
+              rounds_to_long_rest: 2,
+            });
+            setIsReplay(false);
+          } else {
+            setTimerDurationConfigs({
+              work_time_minutes: 20,
+              short_rest_time_seconds: 20,
+              long_rest_time_minutes: 20,
+              rounds_to_long_rest: 5,
+            });
+            setIsReplay(true);
+          }
+        }
+      }, 0);
+
+      // 清除計時器，避免元件卸載時發生記憶體洩漏
+      return () => clearTimeout(initTimer);
+    }
+  }, []);
 
   // toggleTimer 暫停 / 開始切換器
   const toggleTimer = async () => {
@@ -224,7 +275,5 @@ export default function useTimer() {
     setTimerCombo,
     isReplay,
     setIsReplay,
-    originTimerMode,
-    setOriginTimerMode,
   };
 }
