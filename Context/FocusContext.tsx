@@ -5,6 +5,7 @@ import { createContext, useContext, ReactNode, useState } from 'react';
 export interface GridCell {
   id: number;
   status: 'empty' | 'focused';
+  task_name?: string;
   icon_name?: string;
   color?: string;
 }
@@ -12,7 +13,8 @@ export interface GridCell {
 interface FocusContextType {
   activeIcon: string;
   activeColor: string;
-  setActiveTask: (iconName: string, color: string) => void;
+  activeTaskName: string;
+  setActiveTask: (iconName: string, color: string, taskName: string) => void;
   gridCellsArray: GridCell[];
   markCellAsFocused: (cellId: number) => void;
 }
@@ -24,6 +26,7 @@ const FocusContext = createContext<FocusContextType | undefined>(undefined);
 export function FocusProvider({ children }: { children: ReactNode }) {
   const [activeIcon, setActiveIcon] = useState<string>('TreePine');
   const [activeColor, setActiveColor] = useState<string>('text-emerald-500');
+  const [activeTaskName, setActiveTaskName] = useState<string>('');
 
   const [gridCellsArray, setGridCellsArray] = useState<GridCell[]>(
     Array.from({ length: 144 }, (_, index) => ({
@@ -33,9 +36,10 @@ export function FocusProvider({ children }: { children: ReactNode }) {
   );
 
   // 用來接收外部傳來的參數，並更新State
-  const setActiveTask = (iconName: string, color: string) => {
+  const setActiveTask = (iconName: string, color: string, taskName: string) => {
     setActiveIcon(iconName);
     setActiveColor(color);
+    setActiveTaskName(taskName);
   };
 
   // 給計時器用的觸發器，用來傳入格子的 ID ，把他變成專注狀態
@@ -48,6 +52,7 @@ export function FocusProvider({ children }: { children: ReactNode }) {
           status: 'focused',
           icon_name: activeIcon,
           color: activeColor,
+          task_name: activeTaskName,
         };
       }
       return newGrid;
@@ -57,7 +62,14 @@ export function FocusProvider({ children }: { children: ReactNode }) {
   return (
     // 把 State 和 Function 打包進 value 廣播出去
     <FocusContext.Provider
-      value={{ activeIcon, activeColor, setActiveTask, gridCellsArray, markCellAsFocused }}
+      value={{
+        activeIcon,
+        activeColor,
+        activeTaskName,
+        setActiveTask,
+        gridCellsArray,
+        markCellAsFocused,
+      }}
     >
       {children}
     </FocusContext.Provider>

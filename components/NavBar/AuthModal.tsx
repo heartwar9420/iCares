@@ -2,20 +2,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import ActionIconButton from '../UI/ActionIconButton';
 
 interface AuthModalProps {
   onCloseModal: () => void;
-  initialMode?: 'signin' | 'signup'; // 可以讓父層決定點開時先顯示哪一個
+  initialMode?: 'signin' | 'signup'; // 讓父層決定點開時先顯示哪一個
 }
 
 export default function AuthModal({ onCloseModal, initialMode = 'signin' }: AuthModalProps) {
-  // 1. 定義目前是登入還是註冊模式
+  // 目前是登入還是註冊模式
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
-
-  // 共用的 Input 狀態
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState(''); // 只有註冊會用到
+  const [displayName, setDisplayName] = useState('');
 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -79,13 +78,13 @@ export default function AuthModal({ onCloseModal, initialMode = 'signin' }: Auth
         ref={AuthContainerRef}
         className="relative w-full max-w-md p-8 bg-[#161b26] rounded-2xl border border-slate-800 shadow-2xl"
       >
-        {/* 標題根據 mode 切換 */}
+        {/* 標題切換 */}
         <h2 className="text-white text-2xl font-bold mb-6 text-center">
           {isSignIn ? '登入 iCares' : '建立新帳號'}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 註冊模式下才顯示「暱稱」輸入框 */}
+          {/* 註冊模式下才顯示暱稱輸入框 */}
           {!isSignIn && (
             <div>
               <label className="text-sm block mb-1">顯示名稱</label>
@@ -100,7 +99,7 @@ export default function AuthModal({ onCloseModal, initialMode = 'signin' }: Auth
           )}
 
           <div>
-            <label className="text-sm block mb-1">電子信箱</label>
+            <label className="text-base block mb-2">電子信箱</label>
             <input
               type="email"
               value={email}
@@ -111,7 +110,7 @@ export default function AuthModal({ onCloseModal, initialMode = 'signin' }: Auth
           </div>
 
           <div>
-            <label className="text-sm block mb-1">密碼</label>
+            <label className="text-base block mb-2">密碼</label>
             <input
               type="password"
               value={password}
@@ -121,17 +120,12 @@ export default function AuthModal({ onCloseModal, initialMode = 'signin' }: Auth
             />
           </div>
 
-          {/* 顯示錯誤或成功訊息 */}
-          {message && (
-            <p className={`text-sm ${message.includes('❌') ? 'text-red-400' : 'text-[#2ED8C3]'}`}>
-              {message}
-            </p>
-          )}
+          {message && <p className={`text-base text-red-400`}>{message}</p>}
 
           <button
             disabled={loading}
             type="submit"
-            className="w-full bg-[#2ED8C3] text-black font-bold py-3 rounded-lg mt-4 hover:bg-[#25b5a4] transition-colors"
+            className="w-full bg-[#2ED8C3] text-black font-bold py-3 rounded-lg mt-4 cursor-pointer hover:bg-[#25b5a4] transition-colors"
           >
             {loading ? '處理中...' : isSignIn ? '立即登入' : '註冊帳號'}
           </button>
@@ -142,26 +136,32 @@ export default function AuthModal({ onCloseModal, initialMode = 'signin' }: Auth
           {isSignIn ? (
             <p>
               還沒有帳號嗎？{' '}
-              <button onClick={() => setMode('signup')} className="text-[#2ED8C3] hover:underline">
+              <ActionIconButton
+                onClick={() => setMode('signup')}
+                className="text-[#2ED8C3] hover:underline"
+              >
                 立即註冊
-              </button>
+              </ActionIconButton>
             </p>
           ) : (
             <p>
               已經有帳號了？{' '}
-              <button onClick={() => setMode('signin')} className="text-[#2ED8C3] hover:underline">
+              <ActionIconButton
+                onClick={() => setMode('signin')}
+                className="text-[#2ED8C3] hover:underline"
+              >
                 返回登入
-              </button>
+              </ActionIconButton>
             </p>
           )}
         </div>
 
-        <button
+        <ActionIconButton
           onClick={onCloseModal}
           className="absolute top-4 right-4 text-slate-500 hover:text-white"
         >
           ✕
-        </button>
+        </ActionIconButton>
       </div>
     </div>
   );

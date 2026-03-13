@@ -3,9 +3,7 @@ import ActionIconButton from '../UI/ActionIconButton';
 import { CircleMinus, CirclePlus, Square, SquareCheck } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
-// ==========================================
-// 1. 單行設定組件 (SettingRow) 質感升級
-// ==========================================
+// 設定會用到的參數
 type TimerKey =
   | 'work_time_minutes'
   | 'short_rest_time_seconds'
@@ -14,10 +12,9 @@ type TimerKey =
 
 interface Props {
   label: string;
-  timeKey: TimerKey; // 這裡也可以直接套用
+  timeKey: TimerKey;
   value: number;
   isDisabled: boolean;
-  // 👇 把原本的 any 換成 TimerKey
   onUpdate: (key: TimerKey, value: number) => void;
 }
 
@@ -44,10 +41,11 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
           <CircleMinus size={18} />
         </ActionIconButton>
 
-        {/* 範圍拉桿 (使用 accent 改變原生的顏色) */}
+        {/* 範圍拉桿 */}
         <input
           type="range"
-          className="flex-1 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#ffb347]"
+          className={`flex-1 h-1.5 bg-white/10 rounded-lg appearance-none accent-[#ffb347] 
+          ${!isDisabled ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
           min={'1'}
           max={maxLimit}
           value={value}
@@ -64,11 +62,12 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
           <CirclePlus size={18} />
         </ActionIconButton>
 
-        {/* 數字輸入框 (深色背景、無上下箭頭) */}
+        {/* 數字輸入框 */}
         <input
           min={1}
           max={maxLimit}
-          className="w-12 bg-black/30 border border-white/10 rounded-lg text-center text-slate-200 text-sm py-1 focus:outline-none focus:border-[#ffb347]/50 [&::-webkit-inner-spin-button]:appearance-none"
+          className={`w-12 bg-black/30 border border-white/10 rounded-lg text-center text-slate-200 text-sm py-1 focus:outline-none focus:border-[#ffb347]/50 [&::-webkit-inner-spin-button]:appearance-none
+            ${!isDisabled ? '' : 'cursor-not-allowed'}`}
           type="number"
           value={value === 0 ? '' : value}
           onChange={(e) => {
@@ -94,9 +93,6 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
   );
 };
 
-// ==========================================
-// 2. 主設定面板 (TimerConfigPanel) 質感升級
-// ==========================================
 export default function TimerConfigPanel() {
   const {
     isTimerConfigOpen,
@@ -113,15 +109,14 @@ export default function TimerConfigPanel() {
   const isInputsLocked = timerCombo !== 'CustomCombo';
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // 點擊外面關閉面板
   // 點擊外面關閉面板並自動存檔
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      // 如果點擊的目標不在 panel 裡面
+      // 如果點擊的目標不在 panel 裡面 就關閉
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setIsTimerConfigOpen(false); // 1. 關閉面板
+        setIsTimerConfigOpen(false);
 
-        // 2. 🔥 面板關閉的瞬間，把當下的狀態無縫存入 localStorage
+        // 面板關閉時，把當下的狀態存入 localStorage
         localStorage.setItem('icares_last_mode', timerCombo);
 
         if (timerCombo === 'CustomCombo') {
@@ -197,7 +192,6 @@ export default function TimerConfigPanel() {
       newReplay = savedReplay ? JSON.parse(savedReplay) : false;
     }
 
-    // 1. 更新畫面當下的狀態
     setTimerDurationConfigs(newConfig);
     setIsReplay(newReplay);
   };
@@ -205,7 +199,7 @@ export default function TimerConfigPanel() {
   // 產生上方模式按鈕的樣式邏輯
   const getModeBtnClass = (modeKey: string) => {
     const isSelected = timerCombo === modeKey;
-    return `flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+    return `flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
       isSelected
         ? 'bg-[#ffb347]/15 text-[#ffb347] border border-[#ffb347]/30 shadow-[0_0_10px_rgba(255,179,71,0.15)]'
         : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/10 hover:text-slate-200'
@@ -215,10 +209,9 @@ export default function TimerConfigPanel() {
   return (
     <div
       ref={panelRef}
-      // 毛玻璃外框設定
       className="bg-[#0a0e17]/95 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl z-50 rounded-3xl p-6 w-[420px] flex flex-col gap-6"
     >
-      {/* 頂部四個模式選擇按鈕 */}
+      {/* 模式選擇按鈕 */}
       <div className="flex gap-2 bg-black/20 p-1.5 rounded-2xl border border-white/5">
         <button
           className={getModeBtnClass('iCares')}
@@ -258,7 +251,7 @@ export default function TimerConfigPanel() {
         </button>
       </div>
 
-      {/* 四條時間設定拉桿 */}
+      {/* 時間設定拉桿 */}
       <div className="flex flex-col gap-4">
         <SettingRow
           label="專注時間 (分)"
@@ -299,14 +292,20 @@ export default function TimerConfigPanel() {
           <button
             disabled={isInputsLocked}
             onClick={() => setIsReplay(true)}
-            className={`flex items-center gap-2 text-sm transition-colors ${isReplay ? 'text-[#ffb347]' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex items-center gap-2 text-sm transition-colors 
+              ${isReplay ? 'text-[#ffb347]' : 'text-slate-500 hover:text-slate-300'}
+              ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}
+              `}
           >
             {isReplay ? <SquareCheck size={18} /> : <Square size={18} />} <span>開啟</span>
           </button>
           <button
             disabled={isInputsLocked}
             onClick={() => setIsReplay(false)}
-            className={`flex items-center gap-2 text-sm transition-colors ${!isReplay ? 'text-slate-200' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex items-center gap-2 text-sm transition-colors
+              ${!isReplay ? 'text-slate-200' : 'text-slate-500 hover:text-slate-300'}
+              ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}
+              `}
           >
             {!isReplay ? <SquareCheck size={18} /> : <Square size={18} />} <span>關閉</span>
           </button>

@@ -20,7 +20,7 @@ import { useFocus } from '@/Context/FocusContext';
 
 interface Todo {
   id: string;
-  title: string;
+  task_name: string;
   icon_name: string;
   color: string;
   isFinished: boolean;
@@ -52,13 +52,13 @@ export default function TodoList() {
   }, []);
   // 用來 Add todo 的箭頭函式
   const handleAddTodo = (
-    title: string,
+    task_name: string,
     incoming_icon_name: string,
     incoming_color_class: string,
   ) => {
     const newTodo = {
       id: crypto.randomUUID(), // 生成隨機的ID
-      title: title,
+      task_name: task_name,
       icon_name: incoming_icon_name || 'TreePine', // 用 || 來預設值
       color: incoming_color_class || 'bg-green-500',
       isFinished: false,
@@ -92,14 +92,14 @@ export default function TodoList() {
   // 更新Todo
   const handleUpdateTodo = (
     id: string,
-    updates: { title?: string; icon_name?: string; color?: string },
+    updates: { task_name?: string; icon_name?: string; color?: string },
   ) => {
     const updateTodos = todos.map((todo) => {
       if (todo.id === id) {
         return {
           ...todo, // 先展開舊的
           ...updates, // 再展開新的 (會取代舊的)
-          title: updates.title ?? todo.title,
+          task_name: updates.task_name ?? todo.task_name,
           icon_name: updates.icon_name ?? todo.icon_name,
           color: updates.color ?? todo.color,
         };
@@ -121,10 +121,10 @@ export default function TodoList() {
       // 把第一個設為 firstTask
       const firstTask = activeItems[0];
       // 把 firstTask 的 icon 和 color 存起來
-      setActiveTask(firstTask.icon_name, firstTask.color);
+      setActiveTask(firstTask.icon_name, firstTask.color, firstTask.task_name);
     } else {
       // 如果沒東西 就用預設的項目
-      setActiveTask('TreePine', 'text-emerald-500');
+      setActiveTask('TreePine', 'text-emerald-500', '');
     }
   }, [todos, activeItems, setActiveTask]);
 
@@ -192,8 +192,7 @@ export default function TodoList() {
         const oldIndex = prev.findIndex((t) => t.id === active.id);
         const newIndex = prev.findIndex((t) => t.id === over.id);
 
-        // --- 這裡是新增的防呆區塊 ---
-        // 如果 newIndex 是 -1，代表 over.id 是籃子（例如 "completedBasket"）
+        // 如果 newIndex 是 -1，代表 over.id 是籃子
         if (newIndex === -1) {
           const item = prev[oldIndex];
           const newStatus = over.id === 'completedBasket';
@@ -213,19 +212,16 @@ export default function TodoList() {
       });
     }
 
-    // 記得清除影子
+    // 清除影子
     setActiveId(null);
   };
 
-  // ... 上方的 hooks, handles, sensors 邏輯通通保留 ...
-
   return (
-    // 1. 最外層的容器：套用科技風外框
     <div className="flex flex-col h-full bg-white/5 border border-white/10 rounded-3xl p-6 overflow-hidden">
       {/* 標題 */}
-      <h3 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-4 shrink-0">
-        深度工作任務
-      </h3>
+      <div className="text-lg font-bold tracking-widest text-slate-500 uppercase mb-4 shrink-0">
+        待辦事項
+      </div>
 
       <DndContext
         collisionDetection={closestCenter}
@@ -241,7 +237,7 @@ export default function TodoList() {
               <TodoItem
                 id={activeTodo.id}
                 isFinished={activeTodo.isFinished}
-                TodoItemTitle={activeTodo.title}
+                taskName={activeTodo.task_name}
                 TodoItemColor={activeTodo.color}
                 TodoItemIcon={activeTodo.icon_name}
                 onUpdateTodo={() => {}}
@@ -257,12 +253,11 @@ export default function TodoList() {
           ) : null}
         </DragOverlay>
 
-        {/* 2. 輸入區塊 */}
         <div className="shrink-0 mb-4">
           <TodoInput onAddTodo={handleAddTodo} />
         </div>
 
-        {/* 3. 清單滾動區塊 */}
+        {/* 未完成區 */}
         {isMounted && (
           <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar pr-2 pb-2">
             <DroppableBasket id="activeBasket">
@@ -271,7 +266,7 @@ export default function TodoList() {
                   <TodoItem
                     onUpdateTodo={handleUpdateTodo}
                     key={todo.id}
-                    TodoItemTitle={todo.title}
+                    taskName={todo.task_name}
                     TodoItemColor={todo.color}
                     TodoItemIcon={todo.icon_name}
                     onDeleteTodo={handleDeleteTodo}
@@ -294,14 +289,15 @@ export default function TodoList() {
               </div>
             )}
 
+            {/* 已完成區 */}
             <DroppableBasket id="completedBasket">
               <SortableContext items={completedItems}>
                 {completedItems.map((todo) => (
                   <TodoItem
-                    className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" // 已完成的項目變暗
+                    className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
                     onUpdateTodo={handleUpdateTodo}
                     key={todo.id}
-                    TodoItemTitle={todo.title}
+                    taskName={todo.task_name}
                     TodoItemColor={todo.color}
                     TodoItemIcon={todo.icon_name}
                     onDeleteTodo={handleDeleteTodo}

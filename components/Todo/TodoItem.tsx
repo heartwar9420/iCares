@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import ActionIconButton from '../UI/ActionIconButton';
 
 interface Props {
-  TodoItemTitle: string;
+  taskName: string;
   onDeleteTodo: (id: string) => void;
   id: string;
   onToggleTodo: (id: string) => void;
@@ -16,13 +16,13 @@ interface Props {
   TodoItemIcon: string;
   onUpdateTodo: (
     id: string,
-    updates: { title?: string; icon_name?: string; color?: string },
+    updates: { task_name?: string; icon_name?: string; color?: string },
   ) => void;
   className?: string;
 }
 
 export default function TodoItem({
-  TodoItemTitle,
+  taskName,
   onDeleteTodo,
   id,
   onToggleTodo,
@@ -36,7 +36,7 @@ export default function TodoItem({
   const TodoIcon = matchedIconConfig ? matchedIconConfig.icon : TreePine;
 
   const [isEditModeActive, setIsEditModeActive] = useState(false);
-  const [editTitleBuffer, setEditTitleBuffer] = useState(TodoItemTitle);
+  const [editTaskNameBuffer, setEditTaskNameBuffer] = useState(taskName);
   const [isOpenPalettePanel, setIsOpenPalettePanel] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRef = useRef<HTMLDivElement>(null);
@@ -68,8 +68,8 @@ export default function TodoItem({
   };
 
   const saveEdit = () => {
-    if (editTitleBuffer.trim() !== '') {
-      onUpdateTodo(id, { title: editTitleBuffer.trim() });
+    if (editTaskNameBuffer.trim() !== '') {
+      onUpdateTodo(id, { task_name: editTaskNameBuffer.trim() });
       setIsEditModeActive(false);
     }
   };
@@ -83,10 +83,9 @@ export default function TodoItem({
       style={style}
       {...attributes}
       {...listeners}
-      // 科技風卡片樣式：group 用來控制內部按鈕的 hover 顯示
       className={`group flex gap-3 items-center w-full p-3 mb-2 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 hover:border-white/10 transition-all cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 border-[#ffb347] border-dashed' : ''} ${className}`}
     >
-      {/* 左側：圖示 (點擊可開啟調色盤，但要阻擋事件冒泡避免觸發拖曳) */}
+      {/* Icon 點擊可開啟調色盤 */}
       <div className="relative shrink-0" onPointerDown={(e) => e.stopPropagation()}>
         <ActionIconButton
           onClick={() => setIsOpenPalettePanel(!isOpenPalettePanel)}
@@ -112,8 +111,8 @@ export default function TodoItem({
         {isEditModeActive ? (
           <input
             ref={inputRef}
-            value={editTitleBuffer}
-            onChange={(e) => setEditTitleBuffer(e.target.value)}
+            value={editTaskNameBuffer}
+            onChange={(e) => setEditTaskNameBuffer(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') saveEdit();
               if (e.key === 'Escape') setIsEditModeActive(false);
@@ -124,12 +123,12 @@ export default function TodoItem({
           <span
             className={`block truncate text-sm font-medium ${isFinished ? 'line-through text-slate-500' : 'text-slate-200'}`}
           >
-            {TodoItemTitle}
+            {taskName}
           </span>
         )}
       </div>
 
-      {/* 右側：編輯/刪除按鈕 (平時隱藏，Hover 顯示) + 打勾按鈕 */}
+      {/* 編輯/刪除/打勾按鈕*/}
       <div className="flex items-center gap-1 shrink-0" onPointerDown={(e) => e.stopPropagation()}>
         {isEditModeActive ? (
           <>
@@ -163,7 +162,7 @@ export default function TodoItem({
           </div>
         )}
 
-        {/* 狀態切換按鈕 (設計稿中的方形 Checkbox) */}
+        {/* 完成按鈕 */}
         <ActionIconButton
           onClick={() => onToggleTodo(id)}
           className="p-1 hover:scale-110 transition-transform"

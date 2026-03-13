@@ -11,11 +11,15 @@ export default function MessageInput({ onSendMessage, shouldFocus }: Props) {
   const [messageInputText, setMessageInputText] = useState('');
 
   const handleSend = () => {
+    // 如果把開頭和結尾的空白都去除掉之後還是 '' 就不傳送(禁止使用者傳送空白的意思)
     if (messageInputText.trim() === '') return;
+    // 把input裡面的東西用 onSendMessage 傳送出去
     onSendMessage(messageInputText);
+    // 把 input 清空
     setMessageInputText('');
   };
 
+  // 當使用者按下聊天室的按鈕後 就可以直接開始打字
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (shouldFocus) {
@@ -23,6 +27,7 @@ export default function MessageInput({ onSendMessage, shouldFocus }: Props) {
     }
   }, [shouldFocus]);
 
+  // 如果把頭尾的空白去除掉之後 > 0 才讓使用者可以按下 btn
   const hasText = messageInputText.trim().length > 0;
 
   return (
