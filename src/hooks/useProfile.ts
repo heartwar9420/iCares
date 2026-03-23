@@ -9,7 +9,7 @@ export interface UserProfile {
 
 export function useProfile() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const fetchUser = useCallback(async () => {
@@ -39,6 +39,20 @@ export function useProfile() {
   }, []);
   useEffect(() => {
     fetchUser();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        await fetchUser();
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [fetchUser]);
 
   return { user, loading, fetchUser, setLoading, profile };

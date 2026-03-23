@@ -51,7 +51,7 @@ export default function AuthModal({ onCloseAuthModal, initialMode = 'signin' }: 
       } else {
         setMessage('登入成功！');
         onCloseAuthModal(); // 關閉彈窗
-        router.refresh(); // 刷新頁面狀態
+        router.push('dashboard');
       }
     } else {
       // 註冊邏輯
