@@ -1,8 +1,11 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware  # 前後端連線使用
-from typing import List  # 型別提示
-import datetime  # 日期時間
-from datetime import datetime, timezone, timedelta
+from typing import List, Optional, Dict  # 型別提示
+from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from pathlib import Path
 
 
 app = FastAPI()
@@ -78,44 +81,200 @@ async def get_timer(
 
 class ConnectionManager:
     def __init__(self):
-        # 建立一個 陣列(List) 用來放 前端的連線
-        self.active_client_connections: List[WebSocket] = []
+        # 建立一個 字典 用來 user_id 當作key 用來存詳細資料和連線
+        self.active_client_connections: Dict[str, dict] = {}
 
     # 連線的 function
-    async def connect_client(self, client_connection: WebSocket):
+    async def connect_client(
+        self, client_connection: WebSocket, user_id: str, name: str
+    ):
         # 同意連線
         await client_connection.accept()
-        # 把他 append 到List中
-        self.active_client_connections.append(client_connection)
+        # 把使用者加到字典中
+        self.active_client_connections[user_id] = {
+            "ws": client_connection,
+            "name": name,
+            "isConnected": True,
+            "privacyMode": "Public",
+            "autoStatus": "專注中",
+        }
+        # 有人上線 就廣播更新名單
+        await self.broadcast_online_users()
 
     # 離線的 function
-    def disconnect_client(self, client_connection: WebSocket):
-        self.active_client_connections.remove(client_connection)
+    async def disconnect_client(self, user_id: str):
+        if user_id in self.active_client_connections:
+            del self.active_client_connections[user_id]
+            # 有人離線就廣播更新名單
+            await self.broadcast_online_users()
+
+    # 廣播線上名單的 function
+    async def broadcast_online_users(self):
+        users_list = []
+        for uid, data in self.active_client_connections.items():
+            users_list.append(
+                {
+                    "id": uid,
+                    "name": data["name"],
+                    "isConnected": data["isConnected"],
+                    "privacyMode": data["privacyMode"],
+                    "autoStatus": data["autoStatus"],
+                }
+            )
+        payload = {"type": "online_users", "users": users_list}
+        for data in self.active_client_connections.values():
+            await data["ws"].send_json(payload)
 
     # 發送使用者資料 和 使用者輸入文字 的 Json function (格式是字典)
     async def broadcast_json_messages(self, message_payload: dict):
-        for connection in self.active_client_connections:
-            await connection.send_json(message_payload)
+        payload = {"type": "chat_message", **message_payload}
+        for data in self.active_client_connections.values():
+            await data["ws"].send_json(payload)
 
 
 # 讓整個 FastAPI 都能使用這個表
 chat_room_manager = ConnectionManager()
 
+# 讀取 .env
+load_dotenv(".env.local")
+
+# 初始化 supabase
+url: str = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+key: str = os.getenv("SUPABASE_SECRET_ROLE_KEY")
+supabase_db: Client = create_client(url, key)
+
 
 @app.websocket("/api/chat")
-async def chat_room_endpoint(client_connection: WebSocket):
+async def chat_room_endpoint(
+    client_connection: WebSocket, user_id: str, name: str = "未知用戶"
+):
     # 打開和前端的連線
-    await chat_room_manager.connect_client(client_connection)
+    await chat_room_manager.connect_client(client_connection, user_id, name)
     try:
         while True:
             # 持續接收前端的 JSON
             incoming_payload = await client_connection.receive_json()
-            tz_taiwan = timezone(timedelta(hours=8))
-            # 統一由後端押上時間
-            current_time_string = datetime.now(tz_taiwan).strftime("%H:%M")
-            incoming_payload["timestamp"] = current_time_string
 
-            # 把收到的 JSON 回傳回去給前端
-            await chat_room_manager.broadcast_json_messages(incoming_payload)
+            if incoming_payload.get("type") == "status_update":
+
+                if user_id in chat_room_manager.active_client_connections:
+                    user_data = chat_room_manager.active_client_connections[user_id]
+                    if "autoStatus" in incoming_payload:
+                        user_data["autoStatus"] = incoming_payload["autoStatus"]
+                    if "privacyMode" in incoming_payload:
+                        user_data["privacyMode"] = incoming_payload["privacyMode"]
+                    await chat_room_manager.broadcast_online_users()
+                continue
+            # 寫入supabase 的 messages 表
+            try:
+                insert_response = (
+                    supabase_db.table("messages")
+                    .insert(
+                        {
+                            "user_id": incoming_payload["user_id"],
+                            "content": incoming_payload["content"],
+                        }
+                    )
+                    .execute()
+                )
+                saved_message = insert_response.data[0]
+                profile_response = (
+                    supabase_db.table("profiles")
+                    .select("display_name")
+                    .eq("id", incoming_payload["user_id"])
+                    .execute()
+                )
+                display_name = (
+                    profile_response.data[0]["display_name"]
+                    if profile_response.data
+                    else "未知用戶"
+                )
+
+                data = {
+                    "id": saved_message["id"],
+                    "user_id": saved_message["user_id"],
+                    "display_name": display_name,
+                    "content": saved_message["content"],
+                    "created_at": saved_message["created_at"],
+                }
+                await chat_room_manager.broadcast_json_messages(data)
+            except Exception as e:
+                print(f"寫入資料庫失敗{e}")
+
     except WebSocketDisconnect:
-        chat_room_manager.disconnect_client(client_connection)
+        await chat_room_manager.disconnect_client(user_id)
+
+
+# 定義前端傳來的資料結構
+class FocusRecordCreate(BaseModel):
+    user_id: str
+    todo_id: Optional[str] = None
+    start_time: str
+    end_time: str
+    duration_seconds: int
+
+
+@app.post("/api/focus-records")
+async def create_focus_record(record: FocusRecordCreate):
+    try:
+        # 準備存入資料庫的字典
+        new_data = {
+            "user_id": record.user_id,
+            "todo_id": record.todo_id,
+            "start_time": record.start_time,
+            "end_time": record.end_time,
+            "duration_seconds": record.duration_seconds,
+        }
+        # 執行寫入
+        response = supabase_db.table("focus_records").insert(new_data).execute()
+
+        return {"status": "success", "data": response.data, "message": "okay"}
+    except Exception as e:
+
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/focus-records/{user_id}")
+async def get_focus_records(user_id: str):
+    try:
+        # 從資料庫抓使用者的資料(倒序)
+        response = (
+            supabase_db.table("focus_records")
+            # * = 抓取 focus_records的 全部資料 , todos(task_name) = 抓 todos 中的 task_name 欄位資料
+            .select("*,todos(task_name)")
+            .eq("user_id", user_id)
+            .order("start_time", desc=True)
+            .execute()
+        )
+
+        return {"status": "success", "data": response.data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.delete("/api/focus-records/{record_id}")
+async def delete_focus_records(record_id: str):
+    try:
+        response = (
+            supabase_db.table("focus_records").delete().eq("id", record_id).execute()
+        )
+        if len(response.data) > 0:
+            return {"status": "success", "message": f"紀錄{record_id}已刪除"}
+        else:
+            return {"status": "error", "message": "刪除失敗"}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/global-focus-status")
+async def get_global_focus_status():
+    try:
+        response = (
+            supabase_db.table("focus_records").select("duration_seconds").execute()
+        )
+
+        total_seconds = sum(record["duration_seconds"] for record in response.data)
+        return {"status": "success", "total_seconds": total_seconds}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
