@@ -171,27 +171,27 @@ export default function SocialPanel() {
             {/* 下拉選單 */}
             {isMenuOpen && (
               <div className="absolute top-full left-0 mt-2 w-32 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                <button
+                <ActionIconButton
                   onClick={() => handleStatusChange('Public')}
                   className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-300 hover:bg-white/5 transition-colors"
                 >
                   <Circle size={12} className="fill-green-500 text-green-500" />
                   上線
-                </button>
-                <button
+                </ActionIconButton>
+                <ActionIconButton
                   onClick={() => handleStatusChange('Hidden')}
                   className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-300 hover:bg-white/5 transition-colors"
                 >
                   <EyeOff size={14} className="text-slate-400" />
                   隱藏
-                </button>
-                <button
+                </ActionIconButton>
+                <ActionIconButton
                   onClick={() => handleStatusChange('Offline')}
                   className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5"
                 >
                   <PowerOff size={14} className="text-red-400" />
                   離線
-                </button>
+                </ActionIconButton>
               </div>
             )}
           </div>
