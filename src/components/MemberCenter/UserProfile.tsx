@@ -228,17 +228,6 @@ export default function UserProfile() {
         </div>
       </div>
 
-      {/* 危險區域
-      <div className="bg-[#1e2433] rounded-2xl p-8 border border-slate-700/50">
-        <div className="text-lg font-semibold text-red-400 mb-6">危險區域</div>
-        <div className="flex flex-col items-center">
-          <ActionIconButton className="w-full max-w-md py-3 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50 text-red-400 rounded-lg transition-all">
-            刪除帳號
-          </ActionIconButton>
-          <p className="text-slate-500 mt-3 font-bold">刪除後所有專注數據將永久遺失</p>
-        </div>
-      </div> */}
-
       {/* 密碼修改彈窗 */}
       {isVerifyPasswordModalOpen && (
         <div

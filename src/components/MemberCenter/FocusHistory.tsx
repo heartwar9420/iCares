@@ -9,12 +9,12 @@ export default function FocusHistory() {
   const { groupedHistory, fetchFocusHistory, isLoadingHistory, deleteFocusRecord } =
     useFocusContext();
 
-  // 1. 初次載入時抓取資料
+  // 初次載入時抓取資料
   useEffect(() => {
     fetchFocusHistory();
   }, [fetchFocusHistory]);
 
-  // 2. 計算頂部數據 (使用 useMemo 優化效能)
+  // 計算本日及全部數據
   const stats = useMemo(() => {
     let todaySeconds = 0;
     let totalSeconds = 0;
@@ -42,7 +42,7 @@ export default function FocusHistory() {
     };
   }, [groupedHistory]);
 
-  // 3. 輔助函式：格式化時間範圍 (如 10:00 - 10:25)
+  // 把時間範圍格式化
   const formatTimeRange = (startStr: string, endStr: string) => {
     const start = new Date(startStr);
     const end = new Date(endStr);
