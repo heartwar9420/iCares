@@ -96,17 +96,20 @@ class ConnectionManager:
             "name": name,
             "isConnected": True,
             "privacyMode": "Public",
-            "autoStatus": "專注中",
+            "autoStatus": "閒置中",
         }
         # 有人上線 就廣播更新名單
         await self.broadcast_online_users()
 
     # 離線的 function
-    async def disconnect_client(self, user_id: str):
+    async def disconnect_client(self, client_connection: WebSocket, user_id: str):
         if user_id in self.active_client_connections:
-            del self.active_client_connections[user_id]
-            # 有人離線就廣播更新名單
-            await self.broadcast_online_users()
+            # 只有「正在斷線的 ws」等於「字典裡紀錄的最新 ws」時，才執行刪除
+            # 這樣舊連線斷線時不會誤刪到剛建立的新連線
+            if self.active_client_connections[user_id]["ws"] == client_connection:
+                del self.active_client_connections[user_id]
+                # 有人離線就廣播更新名單
+                await self.broadcast_online_users()
 
     # 廣播線上名單的 function
     async def broadcast_online_users(self):
@@ -155,6 +158,11 @@ async def chat_room_endpoint(
             # 持續接收前端的 JSON
             incoming_payload = await client_connection.receive_json()
 
+            # 做一個假的連線 用來確保使用者不會斷線
+            if incoming_payload.get("type") == "ping":
+                await client_connection.send_json({"type": "pong"})  # 回應一個 pong
+                continue
+
             if incoming_payload.get("type") == "status_update":
 
                 if user_id in chat_room_manager.active_client_connections:
@@ -187,7 +195,7 @@ async def chat_room_endpoint(
                 display_name = (
                     profile_response.data[0]["display_name"]
                     if profile_response.data
-                    else "未知用戶"
+                    else "未設定暱稱"
                 )
 
                 data = {
@@ -202,7 +210,7 @@ async def chat_room_endpoint(
                 print(f"寫入資料庫失敗{e}")
 
     except WebSocketDisconnect:
-        await chat_room_manager.disconnect_client(user_id)
+        await chat_room_manager.disconnect_client(client_connection, user_id)
 
 
 # 定義前端傳來的資料結構

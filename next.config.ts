@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false, // 關閉嚴格模式
   /* config options here */
   images: {
     remotePatterns: [

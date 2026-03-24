@@ -74,7 +74,6 @@ export default function FocusMatrix() {
         })}
       </div>
 
-      {/* 時間軸標示 */}
       <div className=" flex justify-between text-base text-slate-600 font-bold font-mono">
         <span>00:00</span>
         <span>06:00</span>
