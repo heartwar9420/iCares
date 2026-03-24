@@ -3,9 +3,6 @@ import { supabase } from '@/src/lib/supabase';
 import { Todo } from '@/src/types/todo';
 import { useProfileContext } from '../contexts/ProfileContext';
 
-// 假設你的 todoMapper 已經放在某個共用檔案，或是你可以直接寫在這裡
-// 為了簡化，這裡我先直接用 db 的格式轉換
-
 interface GroupedTodos {
   [dateLabel: string]: Todo[];
 }
@@ -24,7 +21,7 @@ export function useTodosHistory() {
         .from('todos')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_completed', true) // ⭐️ 關鍵：只抓已完成的
+        .eq('is_completed', true)
         .order('completed_at', { ascending: false }); // 依照完成時間新到舊排序
 
       if (error) throw error;
@@ -62,7 +59,7 @@ export function useTodosHistory() {
     }
   };
 
-  // 資料分組與統計 (使用 useMemo 避免無謂計算)
+  // 資料分組與統計
   const { groupedTodos, todayCount, totalCount } = useMemo(() => {
     const groups: GroupedTodos = {};
     let today = 0;
@@ -71,7 +68,7 @@ export function useTodosHistory() {
     const yesterdayStr = new Date(Date.now() - 86400000).toLocaleDateString();
 
     completedTodos.forEach((todo) => {
-      // 確保有 completedAt，否則用 createdAt 當作備用
+      // 確保有 completedAt
       const dateStr = new Date(todo.completedAt || new Date()).toLocaleDateString();
 
       let label = dateStr;
