@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Check, CircleCheck, Trash2 } from 'lucide-react';
 
-import ActionIconButton from '../UI/ActionIconButton'; // 假設你有這個按鈕
+import ActionIconButton from '../UI/ActionIconButton';
 import { useTodosHistoryContext } from '@/src/contexts/TodosHistoryContext';
 
 export default function TodosHistory() {
@@ -21,7 +21,7 @@ export default function TodosHistory() {
     fetchCompletedTodos();
   }, [fetchCompletedTodos]);
 
-  // 格式化時間 (10:15)
+  // 格式化時間
   const formatTime = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -70,7 +70,7 @@ export default function TodosHistory() {
                 <div className="grow border-t border-slate-700/50"></div>
               </div>
 
-              {/* 該日期的清單 */}
+              {/* 日期的清單 */}
               <div className="flex flex-col gap-2">
                 {todos.map((todo) => (
                   <div
@@ -102,7 +102,9 @@ export default function TodosHistory() {
           ))}
 
           {totalCount === 0 && (
-            <div className="text-center py-10 text-slate-500">尚無完成紀錄，繼續加油！</div>
+            <div className="text-center text-2xl py-10 text-slate-500">
+              尚無完成紀錄，繼續加油！
+            </div>
           )}
         </div>
       </div>

@@ -245,7 +245,7 @@ export function useTodoList() {
           return [...filtered, { ...item, isCompleted: newStatus }];
         }
 
-        // 這是原本的邏輯：如果是在有鄰居的地方換位置
+        // 如果是在有鄰居的地方換位置
         const newOrder = arrayMove(prev, oldIndex, newIndex);
         newOrder[newIndex] = {
           ...newOrder[newIndex],
@@ -258,7 +258,6 @@ export function useTodoList() {
     // 清除影子
     setActiveId(null);
   };
-  // 6. 將 Component 需要用到的資料與函式回傳
   return {
     isMounted,
     activeItems,

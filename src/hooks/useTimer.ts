@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useFocusContext } from '../contexts/FocusContext';
 import { useChatContext } from '../contexts/ChatContext';
 
 interface TimerConfig {
@@ -222,7 +221,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [isTimerRunning, remainingSeconds, mode, startNewTimer, onWorkEnd]);
+  }, [isTimerRunning, remainingSeconds, mode, startNewTimer, onWorkEnd, updateStatus]);
 
   // 網頁初次載入時，讀取 localStorage 的紀錄
   useEffect(() => {
