@@ -35,7 +35,7 @@ export default function TodosHistory() {
   return (
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto pb-10">
       {/* --- 累積完成 --- */}
-      <div className="bg-[#1e2433] rounded-2xl p-6 px-8 border border-slate-700/50 flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-10 bg-[#1e2433] rounded-2xl p-6 px-8 border border-slate-700/50  items-center justify-between">
         <div className="flex items-center gap-5">
           <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0">
             <Check className="text-orange-500" />
@@ -57,7 +57,7 @@ export default function TodosHistory() {
       </div>
 
       {/* --- 歷史完成 --- */}
-      <div className="bg-[#1e2433] rounded-2xl p-8 border border-slate-700/50">
+      <div className="bg-[#1e2433] rounded-2xl p-4 sm:p-8 border border-slate-700/50">
         <div className="flex flex-col">
           {Object.entries(groupedTodos).map(([dateLabel, todos]) => (
             <div key={dateLabel}>

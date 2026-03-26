@@ -82,19 +82,29 @@ export function useTodoList() {
   // 找到目前 被抓到的 Todo 的完整資料
   const activeTodo = todos.find((t) => t.id === activeId);
 
-  // 用來把第一筆任務和 144grid 連動的 Effect
+  // 先把第一筆任務單獨拉出來
+  const firstActiveTask = activeItems[0];
+
   useEffect(() => {
-    // 如果activeItem > 0  (有未完成事項)
-    if (activeItems.length > 0) {
-      // 把第一個設為 firstTask
-      const firstTask = activeItems[0];
-      // 把 firstTask 的 icon 和 color 存起來
-      setActiveTask(firstTask.iconName, firstTask.iconColor, firstTask.taskName, firstTask.id);
+    if (firstActiveTask) {
+      setActiveTask(
+        firstActiveTask.iconName || 'TreePine',
+        firstActiveTask.iconColor || 'text-emerald-500',
+        firstActiveTask.taskName,
+        firstActiveTask.id,
+      );
     } else {
-      // 如果沒東西 就用預設的項目
-      setActiveTask('TreePine', 'text-emerald-500', '', '');
+      setActiveTask('TreePine', 'text-emerald-500', '一般專注', '');
     }
-  }, [todos, activeItems, setActiveTask]);
+  }, [
+    // 只要第一筆任務的狀態 改變 就更新
+    firstActiveTask?.id,
+    firstActiveTask?.taskName,
+    firstActiveTask?.iconColor,
+    firstActiveTask?.iconName,
+    firstActiveTask,
+    setActiveTask,
+  ]);
 
   // CRUD 邏輯
   // 用來 Add todo
@@ -247,10 +257,6 @@ export function useTodoList() {
 
         // 如果是在有鄰居的地方換位置
         const newOrder = arrayMove(prev, oldIndex, newIndex);
-        newOrder[newIndex] = {
-          ...newOrder[newIndex],
-          isCompleted: prev[newIndex].isCompleted,
-        };
         return newOrder;
       });
     }
