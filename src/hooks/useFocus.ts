@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useProfileContext } from '../contexts/ProfileContext';
 
 interface GridCell {
@@ -17,12 +17,55 @@ interface FocusRecord {
   end_time: string;
   duration_seconds: number;
   created_at?: string;
-  todos?: { task_name: string };
+  todos?: {
+    task_name: string;
+    icon_name?: string;
+    icon_color?: string;
+  };
 }
 
 interface GroupRecords {
   [key: string]: FocusRecord[];
 }
+const generateTodayGrid = (records: FocusRecord[]): GridCell[] => {
+  const newGrid: GridCell[] = Array.from({ length: 144 }, (_, index) => ({
+    id: index,
+    status: 'empty',
+  }));
+
+  const now = new Date();
+  // 建立 00:00:00 的時間點 用來判斷今天是否為今天
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+
+  records.forEach((record) => {
+    const recordDate = new Date(record.start_time);
+    const recordTime = recordDate.getTime();
+
+    // 用 00:00:00 來判斷是否為今天
+    if (recordTime >= todayStart && recordTime < todayEnd) {
+      const startMinutes = recordDate.getHours() * 60 + recordDate.getMinutes();
+      const startCellId = Math.floor(startMinutes / 10);
+
+      const endMinutes = startMinutes + Math.floor(record.duration_seconds / 60);
+      const endCellId = Math.floor(endMinutes / 10);
+
+      for (let i = startCellId; i <= endCellId; i++) {
+        if (i < 144) {
+          newGrid[i] = {
+            id: i,
+            status: 'focused',
+            task_name: record.todos?.task_name || '已專注',
+            icon_name: record.todos?.icon_name || 'TreePine',
+            color: record.todos?.icon_color || 'text-emerald-500',
+          };
+        }
+      }
+    }
+  });
+
+  return newGrid;
+};
 
 export function useFocus() {
   // icon / color / todo title
@@ -63,7 +106,10 @@ export function useFocus() {
       );
       const result = await response.json();
       if (result.status === 'success') {
+        // 更新歷史紀錄列表
         setGroupedHistory(processGrouping(result.data));
+        // 同步更新熱力圖的 144 格
+        setGridCellsArray(generateTodayGrid(result.data));
       }
     } catch (error) {
       console.error('讀取歷史專注資料失敗', error);
@@ -71,6 +117,12 @@ export function useFocus() {
       setIsLoadingHistory(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchFocusHistory();
+    }
+  }, [user?.id, fetchFocusHistory]);
 
   const deleteFocusRecord = async (recordId: string) => {
     if (!window.confirm('確定要刪除此筆紀錄嗎？')) return;
@@ -186,5 +238,8 @@ export function useFocus() {
     groupedHistory,
     deleteFocusRecord,
     activeId,
+    activeColor,
+    activeTaskName,
+    activeIcon,
   };
 }
