@@ -26,7 +26,7 @@ export default function DashBoardPage() {
 
   return (
     <>
-      <div className="relative flex flex-col min-h-screen lg:h-screen lg:overflow-hidden bg-[#0a0e17] ">
+      <div className="relative flex flex-col min-h-screen lg:h-screen bg-[#0a0e17] ">
         <NavBar />
         <DashboardContent />
       </div>

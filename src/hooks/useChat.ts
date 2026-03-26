@@ -273,13 +273,18 @@ export function useChat(onNewMessage?: () => void) {
       }
     };
 
-    socket.onclose = () => {
+    socket.onclose = (event) => {
       if (!isManualOffline) {
-        console.warn('WebSocket 意外斷線，2秒後嘗試重新連線...');
-        setTimeout(() => {
+        console.warn(`WebSocket 斷線 (Code: ${event.code})，2秒後重試...`);
+        const timer = setTimeout(() => {
           setReconnectCount((prev) => prev + 1);
         }, 2000);
+
+        return () => clearTimeout(timer);
       }
+    };
+    socket.onerror = (error) => {
+      console.error('WebSocket 發生錯誤:', error);
     };
 
     return () => {
