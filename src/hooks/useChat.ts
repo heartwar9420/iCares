@@ -203,10 +203,13 @@ export function useChat(onNewMessage?: () => void) {
     // ^ =從字串的最開頭比對, http = 要找的文字 'ws' = 要替換成的文字
     // 這一行 = 把 http://localhost:8000 替換成 ws://localhost:8000
     // 把 http 替換成 ws 是因為這是 webSocket 的專用連線方式
-    const webSocketUrl =
-      baseApiUrl.replace(/^http/, 'ws') +
-      `/api/chat?user_id=${user?.id || 'unknown'}&name=${encodeURIComponent(displayName)}&autoStatus=${encodeURIComponent(currentAutoStatus)}&privacyMode=${encodeURIComponent(currentPrivacyMode)}`;
+    let wsProtocol = 'ws://';
+    if (baseApiUrl.startsWith('https://')) {
+      wsProtocol = 'wss://';
+    }
+    const baseUrlWithoutProtocol = baseApiUrl.replace(/^https?:\/\//, '');
 
+    const webSocketUrl = `${wsProtocol}${baseUrlWithoutProtocol}/api/chat?user_id=${user?.id || 'unknown'}&name=${encodeURIComponent(displayName)}&autoStatus=${encodeURIComponent(currentAutoStatus)}&privacyMode=${encodeURIComponent(currentPrivacyMode)}`;
     // 建立一個真正的 WebSocket 連線實例 ， 且這會立即嘗試連線
     const socket = new WebSocket(webSocketUrl);
     let pongTimeout: NodeJS.Timeout;
