@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { iconOptions } from '../Todo/iconConstants';
 import { useFocusContext } from '@/src/contexts/FocusContext';
+import { useTimerContext } from '@/src/contexts/TimerContext';
 
 export default function FocusMatrix() {
-  const { gridCellsArray } = useFocusContext();
+  const { gridCellsArray, activeColor, activeTaskName, activeIcon } = useFocusContext();
+  const { isTimerRunning, mode, remainingSeconds } = useTimerContext();
 
   const [liveCurrentCellId, setLiveCurrentCellId] = useState<number | null>(null);
 
@@ -35,16 +37,34 @@ export default function FocusMatrix() {
       {/* 144 格區塊 */}
       <div className="flex-1 grid grid-rows-6 grid-flow-col gap-0.75 w-full">
         {gridCellsArray?.map((cell) => {
-          const matchedIconConfig = iconOptions.find((item) => item.name === cell.icon_name);
-          const CellIcon = matchedIconConfig ? matchedIconConfig.icon : null;
+          const isCurrentTimeCell = cell.id === liveCurrentCellId;
+
+          // 判斷這格是不是 正在專注中
+          const isActivelyFocusingNow =
+            (isTimerRunning || remainingSeconds > 0) && mode === 'work' && isCurrentTimeCell;
+
+          // 如果資料庫中顯示 專注中 或 現在正在專注 = isFocused
+          const isFocused = cell.status === 'focused' || isActivelyFocusingNow;
+
+          // 決定顯示的顏色 名稱 圖標
+          const cellColor = cell.color || (isActivelyFocusingNow ? activeColor : 'text-[#ffb347]');
+          const displayTaskName =
+            cell.task_name || (isActivelyFocusingNow ? activeTaskName : '已專注');
+
+          let CellIcon = null;
+
+          if (isActivelyFocusingNow) {
+            const activeIconConfig = iconOptions.find((i) => i.name === activeIcon);
+            CellIcon = activeIconConfig ? activeIconConfig.icon : null;
+          } else {
+            const matchedIconConfig = iconOptions.find((i) => i.name === cell.icon_name);
+            CellIcon = matchedIconConfig ? matchedIconConfig.icon : null;
+          }
 
           const totalMinutes = cell.id * 10;
           const hours = Math.floor(totalMinutes / 60);
           const mins = totalMinutes % 60;
           const timeString = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-
-          const isCurrentTimeCell = cell.id === liveCurrentCellId;
-          const isFocused = cell.status === 'focused';
 
           return (
             <div key={cell.id} className="relative group w-full h-full cursor-pointer">
@@ -52,7 +72,7 @@ export default function FocusMatrix() {
               <div
                 className={`w-full h-full rounded-xs transition-all duration-300
                   ${isFocused ? `bg-current opacity-80 group-hover:opacity-100 ${cell.color || 'text-[#ffb347]'}` : 'bg-white/5 group-hover:bg-white/10'}
-                  ${isCurrentTimeCell ? 'ring-1 ring-white shadow-[0_0_8px_rgba(255,255,255,0.8)] z-10 animate-pulse' : ''}
+                  ${isCurrentTimeCell ? `ring-1 ring-white shadow-[0_0_8px_rgba(255,255,255,0.8)] z-10 ${isTimerRunning ? 'animate-pulse' : ''}` : ''}
                 `}
               ></div>
 
@@ -63,8 +83,8 @@ export default function FocusMatrix() {
                   {isFocused && (
                     <>
                       <span className="w-px h-3 bg-slate-600"></span>
-                      {CellIcon && <CellIcon size={14} className={cell.color} />}
-                      <span>{cell.task_name || '已專注'}</span>
+                      {CellIcon && <CellIcon size={14} className={cellColor} />}
+                      <span>{displayTaskName}</span>
                     </>
                   )}
                 </div>

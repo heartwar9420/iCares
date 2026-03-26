@@ -14,11 +14,10 @@ const TimerContext = createContext<TimerContextType | null>(null);
 // 建立 Provider 元件
 export function TimerProvider({ children }: { children: ReactNode }) {
   // 從另一個context 中拿我們要用到的函式
-  const { markCurrentCell, saveFocusToDatabase, activeId } = useFocusContext();
+  const { saveFocusToDatabase, activeId } = useFocusContext();
 
   const timerState = useTimer({
     onWorkEnd: (startTime, endTime, duration) => {
-      markCurrentCell();
       saveFocusToDatabase(startTime, endTime, duration, activeId);
     },
   });

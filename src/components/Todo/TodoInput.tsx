@@ -13,7 +13,7 @@ export default function TodoInput({ onAddTodo }: Props) {
 
   // 狀態與預設值
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
-  const [currentColor, setCurrentColor] = useState<string>('text-[#ffb347]');
+  const [currentColor, setCurrentColor] = useState<string>('text-green-500');
   const [currentIconKey, setCurrentIconKey] = useState<string>('TreePine');
 
   const matchedIconConfig = iconOptions.find((item) => item.name === currentIconKey);
@@ -81,11 +81,13 @@ export default function TodoInput({ onAddTodo }: Props) {
           </ActionIconButton>
 
           {isPaletteOpen && (
-            <PalettePanel
-              currentColor={currentColor}
-              onColorSelect={setCurrentColor}
-              onIconSelect={setCurrentIconKey}
-            />
+            <div className="absolute top-full right-50 mt-2 z-50">
+              <PalettePanel
+                currentColor={currentColor}
+                onColorSelect={setCurrentColor}
+                onIconSelect={setCurrentIconKey}
+              />
+            </div>
           )}
         </div>
 

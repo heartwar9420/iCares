@@ -25,8 +25,8 @@ export default function MemberCenterModal() {
 
         <div className="text-3xl font-bold mb-6 tracking-widest">會員中心</div>
 
-        {/* Tab 按鈕群組 */}
-        <div className="flex bg-[#151a26] p-1 rounded-xl">
+        {/* 分頁群組 */}
+        <div className="flex flex-col sm:flex-row bg-[#151a26] p-1 rounded-xl">
           <ActionIconButton
             onClick={() => setActiveTab('profile')}
             className={`px-6 py-2 rounded-lg text-xl font-medium tracking-widest transition-all ${

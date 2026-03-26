@@ -18,81 +18,77 @@ export function useProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const fetchUser = useCallback(async () => {
-    try {
-      setLoading(true);
+    const {
+      data: { user: verifiedUser },
+      error,
+    } = await supabase.auth.getUser();
 
-      // 如果還沒有人發起請求，我們就建立一個新的請求
-      if (!fetchUserPromise) {
-        fetchUserPromise = (async () => {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          let profileData = null;
-
-          if (user) {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('id,display_name,privacy_mode,auto_status')
-              .eq('id', user.id)
-              .single();
-
-            if (error) {
-              console.error('使用者資料讀取失敗', error);
-            } else if (data) {
-              profileData = data;
-            }
-          }
-          return { user, profileData };
-        })();
-      }
-
-      // 等待唯一的請求完成
-      const result = await fetchUserPromise;
-      setUser(result.user);
-      setProfile(result.profileData);
-    } catch (error) {
-      console.error('使用者資料讀取失敗', error);
-    } finally {
-      // 請求結束後，把全域變數清空，讓未來的操作可以重新請求
-      fetchUserPromise = null;
-      setLoading(false);
+    if (error || !verifiedUser) {
+      console.error('伺服器驗證使用者失敗', error);
+      setUser(null);
+      setProfile(null);
+    } else {
+      setUser(verifiedUser);
     }
   }, []);
 
   useEffect(() => {
-    fetchUser();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const currentUser = session?.user;
-        setUser(currentUser || null);
-
-        if (currentUser) {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('id,display_name,privacy_mode,auto_status')
-            .eq('id', currentUser.id)
-            .single();
-
-          if (error) {
-            console.error('使用者資料讀取失敗', error);
-          } else if (profileData) {
-            setProfile(profileData);
-          }
-        }
-        setLoading(false);
-      } else if (event === 'SIGNED_OUT') {
+    const loadData = async (sessionUser: User | null) => {
+      // 如果沒登入，清空資料並解除 loading
+      if (!sessionUser) {
         setUser(null);
         setProfile(null);
         setLoading(false);
+        return;
       }
+
+      setUser(sessionUser);
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id,display_name,privacy_mode,auto_status')
+          .eq('id', sessionUser.id)
+          .single();
+
+        if (data && !error) {
+          setProfile(data);
+        } else {
+          setProfile({
+            id: sessionUser.id,
+            display_name: '預設使用者',
+            privacy_mode: 'Public',
+            auto_status: '閒置中',
+          });
+        }
+      } catch (err) {
+        console.error('Profile 執行錯誤:', err);
+        setProfile({
+          id: sessionUser.id,
+          display_name: '連線異常使用者',
+          privacy_mode: 'Public',
+          auto_status: '閒置中',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      loadData(session?.user || null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      loadData(session?.user || null);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchUser]);
+  }, []);
 
   return { user, loading, fetchUser, setLoading, profile };
 }
