@@ -246,6 +246,7 @@ export function useChat(onNewMessage?: () => void) {
       }
 
       if (parsedData.type === 'online_users') {
+        // 更新聊天室名單，不產生聊天訊息
         setOnlineUsers(parsedData.users);
         onlineUsersRef.current = parsedData.users;
       } else if (parsedData.type === 'status_update') {

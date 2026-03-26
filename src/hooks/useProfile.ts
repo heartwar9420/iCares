@@ -9,6 +9,9 @@ export interface UserProfile {
   auto_status?: '專注中' | '閒置中' | '離線中';
 }
 
+// 在 Hook 外部宣告一個全域變數，用來記住 正在執行中的請求
+let fetchUserPromise: Promise<{ user: User | null; profileData: UserProfile | null }> | null = null;
+
 export function useProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
