@@ -6,7 +6,6 @@ import MessageArea from '../Chat/MessageArea';
 import { useChatContext } from '@/src/contexts/ChatContext';
 import { useProfileContext } from '@/src/contexts/ProfileContext';
 
-// (保持不變) 專門處理未讀紅點的 Hook
 function useChatNotification(isChatOpen: boolean) {
   const { messages, lastReadMessageId } = useChatContext();
   const { user } = useProfileContext();
