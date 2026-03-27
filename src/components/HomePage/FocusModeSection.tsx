@@ -81,7 +81,7 @@ export default function FocusModeSection() {
     },
   ];
   return (
-    <section className="min-h-screen py-20 flex flex-col justify-center max-w-7xl mx-auto px-6 md:px-12">
+    <section className="min-h-screen py-20 flex flex-col justify-center max-w-7xl mx-auto md:px-8">
       <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 w-full">
         <div className="w-full lg:w-5/12 space-y-8">
           <div className="space-y-4">
@@ -127,7 +127,7 @@ export default function FocusModeSection() {
         <div className="w-full lg:w-7/12 flex flex-col items-center justify-center relative">
           <div className="absolute inset-0 bg-linear-to-r from-[#ffb347]/10 via-transparent to-blue-500/10 pointer-events-none z-0 blur-3xl"></div>
 
-          <div className="relative z-10 w-full flex justify-center transform scale-100 lg:scale-110">
+          <div className="relative z-10 w-full flex justify-center transform scale-100 md:scale-110 lg:scale-130 xl:scale-150">
             <TimerConfigPanelUI
               timerCombo={demoCombo}
               timerDurationConfigs={demoConfigs}

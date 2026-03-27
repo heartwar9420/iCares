@@ -170,11 +170,12 @@ export default function MusicPlayer() {
 
           <ActionIconButton
             onClick={toggleAutoSync}
-            className={`relative p-1.5 rounded-lg transition-all ${
-              isAutoSync
-                ? 'text-[#ffb347] bg-[#ffb347]/10 hover:bg-[#ffb347]/20'
-                : 'text-slate-400 bg-slate-800 hover:text-slate-400 hover:bg-white/5'
-            }`}
+            className={`relative p-1.5 rounded-lg transition-all 
+              ${
+                isAutoSync
+                  ? 'text-[#ffb347] bg-[#ffb347]/10 hover:bg-[#ffb347]/20'
+                  : 'text-slate-400 bg-slate-800 hover:text-slate-400 hover:bg-white/5'
+              }`}
           >
             {isAutoSync ? <Link size={20} /> : <Unlink size={20} />}
 

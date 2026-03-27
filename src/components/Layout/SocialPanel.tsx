@@ -5,6 +5,7 @@ import OnlineUserList from '../Chat/OnlineUserList';
 import MessageArea from '../Chat/MessageArea';
 import { useChatContext } from '@/src/contexts/ChatContext';
 import { useProfileContext } from '@/src/contexts/ProfileContext';
+import { useTimerContext } from '@/src/contexts/TimerContext';
 
 function useChatNotification(isChatOpen: boolean) {
   const { messages, lastReadMessageId } = useChatContext();
@@ -29,6 +30,7 @@ export default function SocialPanel() {
 
   const { onlineUsers, updateStatus, disconnectChat, reconnectChat } = useChatContext();
   const { profile } = useProfileContext();
+  const { isTimerRunning } = useTimerContext();
 
   const [currentStatus, setCurrentStatus] = useState<'Public' | 'Hidden' | 'Offline'>('Public');
   // 控制彈窗開關
@@ -51,10 +53,14 @@ export default function SocialPanel() {
       setCurrentStatus(targetStatus as 'Public' | 'Hidden' | 'Offline');
 
       if (targetStatus !== 'Offline') {
-        updateStatus('閒置中', targetStatus as 'Public' | 'Hidden');
+        if (isTimerRunning) {
+          updateStatus('專注中', targetStatus as 'Public' | 'Hidden');
+        } else {
+          updateStatus('閒置中', targetStatus as 'Public' | 'Hidden');
+        }
       }
     }, 0);
-  }, [profile, updateStatus]);
+  }, [profile, updateStatus, isTimerRunning]);
 
   const HistoryRef = useRef<HTMLDivElement>(null);
 
@@ -166,7 +172,7 @@ export default function SocialPanel() {
   const statusConfig = getStatusConfig();
 
   return (
-    <div className="flex flex-col gap-6 p-6 h-full rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl ">
+    <div className="flex flex-col gap-6 p-6 h-full max-h-[70vh] lg:max-h-screen rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl ">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-5">
           <div className="text-sm xl:text-base font-bold tracking-[0.2em] text-slate-500">

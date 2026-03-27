@@ -55,7 +55,7 @@ const generateTodayGrid = (records: FocusRecord[]): GridCell[] => {
           newGrid[i] = {
             id: i,
             status: 'focused',
-            task_name: record.todos?.task_name || '已專注',
+            task_name: record.todos?.task_name || '一般專注',
             icon_name: record.todos?.icon_name || 'TreePine',
             color: record.todos?.icon_color || 'text-emerald-500',
           };
