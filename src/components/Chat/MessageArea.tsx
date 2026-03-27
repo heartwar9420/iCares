@@ -7,7 +7,7 @@ interface Props {
   shouldFocus?: boolean;
 }
 
-//  這個 ref 指向的是 HTMLDivElement , 原本的Props
+//  這個 ref 指向的是 HTMLDivElement ,
 const MessageArea = forwardRef<HTMLDivElement, Props>(({ shouldFocus }, ref) => {
   const {
     messages,
@@ -22,7 +22,7 @@ const MessageArea = forwardRef<HTMLDivElement, Props>(({ shouldFocus }, ref) => 
   return (
     <div
       ref={ref}
-      className="flex flex-col h-full w-full rounded-3xl bg-white/5 border border-white/10 overflow-hidden"
+      className="flex flex-col h-full w-full rounded-3xl bg-white/5 border border-white/10 overflow-y-auto"
     >
       {/* 標題列 */}
       <div className="shrink-0 p-4 bg-black/20 flex items-center justify-between">

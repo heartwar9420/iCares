@@ -19,14 +19,18 @@ export default function FocusCore() {
     isReplayingNow,
   } = useTimerContext();
 
-  const minutes = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
+  const safeRemaining = Number(remainingSeconds) || 0; // 為了不要顯示 NaN 強制把他轉成Number
+
+  const minutes = Math.floor(safeRemaining / 60);
+  const seconds = safeRemaining % 60;
 
   const modeText = {
     work: '專注中',
     rest: '短休息',
     long_rest: '長休息',
   };
+  // 根據目前的 mode 顯示中文名稱，如果資料還沒讀取到就顯示預設文字
+  const currentModeText = modeText[mode as keyof typeof modeText] || '狀態讀取中';
 
   // 用一個物件把所有模式的時間對應好
   const timeConfigs = {
@@ -36,7 +40,7 @@ export default function FocusCore() {
   };
 
   // 根據當前 mode 抓取對應時間，如果都沒有就給個預設值
-  const defaultTimeString = timeConfigs[mode] || '--:--';
+  const defaultTimeString = timeConfigs[mode as keyof typeof timeConfigs] || '--:--';
 
   // 0 秒且沒有在倒數中 才是準備開始
   const isInitialState = remainingSeconds === 0 && !isTimerRunning;
@@ -56,7 +60,7 @@ export default function FocusCore() {
   }
 
   // 只有在剩餘時間 = 0 且 時間沒有倒數中 才會顯示 '準備開始'
-  const statusMessage = remainingSeconds === 0 && !isTimerRunning ? '準備開始' : modeText[mode];
+  const statusMessage = remainingSeconds === 0 && !isTimerRunning ? '準備開始' : currentModeText;
 
   // 把時間存到 timeRef 中 預設是0
   const timeRef = useRef(0);
@@ -113,6 +117,7 @@ export default function FocusCore() {
 
   // 計算圓的百分比
   let totalSeconds = 0;
+  totalSeconds = Number(totalSeconds) || 0;
   if (mode === 'work') {
     totalSeconds = timerDurationConfigs.workTimeMinutes * 60;
   } else if (mode === 'rest') {
@@ -146,7 +151,7 @@ export default function FocusCore() {
   });
 
   return (
-    <div className="flex flex-col items-center justify-between h-full relative min-h-0">
+    <div className="flex flex-col items-center justify-between relative min-h-0">
       {/* 計時區塊 */}
       <div className="flex-1 flex flex-col items-center justify-center w-full ">
         {/* 計時器數字與狀態 */}
@@ -181,7 +186,7 @@ export default function FocusCore() {
           <div className="flex items-center justify-center gap-2 mt-2">{dots}</div>
         </div>
 
-        <div className="mt-16 flex items-center justify-center gap-6">
+        <div className="mt-14 flex items-center justify-center gap-6">
           {/* 隱形佔位符讓主按鈕能置中 */}
           <div className="w-12"></div>
 
@@ -212,7 +217,13 @@ export default function FocusCore() {
 
             {/* 提示文字 (Tooltip) */}
             {remainingSeconds !== 0 && (
-              <div className="absolute bottom-full mb-3 whitespace-nowrap ... ">
+              <div
+                className={`absolute bottom-full mb-3 px-3 py-2 bg-slate-800 text-white text-base rounded-lg 
+                    whitespace-nowrap shadow-xl border border-white/10
+                    opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none
+                    right-0
+                    `}
+              >
                 只有重置計時器後才能開啟設定頁面！
               </div>
             )}
