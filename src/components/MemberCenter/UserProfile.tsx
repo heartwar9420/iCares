@@ -212,7 +212,7 @@ export default function UserProfile() {
             </ActionIconButton>
           </div>
 
-          {/* 第三方綁定 */}
+          {/* 第三方綁定
           <div>
             <div className=" text-slate-400 mb-3">第三方帳號綁定</div>
             <div className="grid grid-cols-2 gap-4">
@@ -224,7 +224,7 @@ export default function UserProfile() {
                 GitHub
               </ActionIconButton>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

@@ -15,10 +15,11 @@ export default function SettingModal({ onCloseSettingModal }: Props) {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      onCloseSettingModal();
-      window.location.href = '/';
     } catch (error) {
       console.error('登出失敗', error);
+    } finally {
+      onCloseSettingModal();
+      window.location.href = '/';
     }
   };
   return (

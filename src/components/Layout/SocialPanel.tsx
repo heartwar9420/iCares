@@ -1,69 +1,96 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Circle, MessageSquareText, ChevronDown, Users, EyeOff, PowerOff } from 'lucide-react';
 import ActionIconButton from '../UI/ActionIconButton';
 import OnlineUserList from '../Chat/OnlineUserList';
 import MessageArea from '../Chat/MessageArea';
 import { useChatContext } from '@/src/contexts/ChatContext';
 import { useProfileContext } from '@/src/contexts/ProfileContext';
+import { useTimerContext } from '@/src/contexts/TimerContext';
 
-// (保持不變) 專門處理未讀紅點的 Hook
 function useChatNotification(isChatOpen: boolean) {
-  const { messages } = useChatContext();
-  const [unread, setUnread] = useState(false);
-  const isChatOpenRef = useRef(isChatOpen);
-  const prevMsgCount = useRef(messages?.length || 0);
+  const { messages, lastReadMessageId } = useChatContext();
+  const { user } = useProfileContext();
 
-  useEffect(() => {
-    isChatOpenRef.current = isChatOpen;
-  }, [isChatOpen]);
+  // 如果聊天室開著或是沒訊息 未讀就一定是 false
+  if (isChatOpen || !messages || messages.length === 0 || !lastReadMessageId) {
+    return { unread: false };
+  }
 
-  const handleNewMessage = useCallback(() => {
-    if (!isChatOpenRef.current) {
-      setUnread(true);
-    }
-  }, []);
+  const latestMsg = messages[messages.length - 1];
 
-  useEffect(() => {
-    if (!messages) return;
-    if (prevMsgCount.current !== 0 && messages.length > prevMsgCount.current) {
-      handleNewMessage();
-    }
-    prevMsgCount.current = messages.length;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages]);
+  // 最新訊息的 ID 不等於最後讀取到的訊息 ID 且這則訊息不是我發的
+  const hasUnread = latestMsg.id !== lastReadMessageId && latestMsg.user_id !== user?.id;
 
-  const clearUnread = () => setUnread(false);
-  return { unread, clearUnread };
+  return { unread: hasUnread };
 }
 
 export default function SocialPanel() {
   const [isChatRoomOpen, setIsChatRoomOpen] = useState(false);
-  const { unread, clearUnread } = useChatNotification(isChatRoomOpen);
+  const { unread } = useChatNotification(isChatRoomOpen);
 
-  // 加上我們剛剛新增的 disconnectChat 和 reconnectChat (如果報錯說找不到，請確認 ChatContext 有把這兩個 function export 出來)
   const { onlineUsers, updateStatus, disconnectChat, reconnectChat } = useChatContext();
   const { profile } = useProfileContext();
+  const { isTimerRunning } = useTimerContext();
 
-  // 1. 給定一個固定的初始值，確保 Hydration 不會報錯
   const [currentStatus, setCurrentStatus] = useState<'Public' | 'Hidden' | 'Offline'>('Public');
   // 控制彈窗開關
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // 用來偵測點擊外部的 ref
   const menuRef = useRef<HTMLDivElement>(null);
-  // 2. 在畫面首次渲染完成後，再去讀取本地存檔或資料庫
+  // 在畫面渲染完成後，再去讀取本地存檔或資料庫
   useEffect(() => {
     setTimeout(() => {
       const savedStatus = localStorage.getItem('focus_chat_status');
+      let targetStatus = 'Public';
 
       if (savedStatus) {
         // 如果有存檔，就使用存檔的狀態
-        setCurrentStatus(savedStatus as 'Public' | 'Hidden' | 'Offline');
+        targetStatus = savedStatus;
       } else if (profile) {
         // 如果沒有存檔，才使用 profile 的設定
-        setCurrentStatus(profile.privacy_mode === 'Public' ? 'Public' : 'Hidden');
+        targetStatus = profile.privacy_mode === 'Public' ? 'Public' : 'Hidden';
+      }
+      setCurrentStatus(targetStatus as 'Public' | 'Hidden' | 'Offline');
+
+      if (targetStatus !== 'Offline') {
+        if (isTimerRunning) {
+          updateStatus('專注中', targetStatus as 'Public' | 'Hidden');
+        } else {
+          updateStatus('閒置中', targetStatus as 'Public' | 'Hidden');
+        }
       }
     }, 0);
-  }, [profile]);
+  }, [profile, updateStatus, isTimerRunning]);
+
+  const HistoryRef = useRef<HTMLDivElement>(null);
+
+  // 點擊外部關閉聊天室的邏輯
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      // 如果聊天室沒開，就不用管它
+      if (!isChatRoomOpen) return;
+
+      const toggleBtn = document.getElementById('chat-toggle-btn');
+
+      // 確保有抓到聊天室 且點擊的位置不在聊天室內
+      const isOutsideChat = HistoryRef.current && !HistoryRef.current.contains(target);
+
+      // 確保點擊的位置不在切換按鈕上
+      const isOutsideBtn = !toggleBtn || !toggleBtn.contains(target);
+
+      // 如果都滿足的話 就關閉聊天室
+      if (isOutsideChat && isOutsideBtn) {
+        setIsChatRoomOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isChatRoomOpen]);
 
   // 點擊外部關閉彈窗的邏輯
   useEffect(() => {
@@ -80,7 +107,7 @@ export default function SocialPanel() {
     setCurrentStatus(status);
     setIsMenuOpen(false);
 
-    // 關鍵：記住使用者的選擇，這樣換頁回來就不會被舊的 profile 蓋掉！
+    // 記住使用者的選擇
     localStorage.setItem('focus_chat_status', status);
 
     if (status === 'Offline') {
@@ -96,7 +123,7 @@ export default function SocialPanel() {
 
   const [globalFocusMinutes, setGlobalFocusMinutes] = useState(0);
 
-  // (保持不變) 取得全站專注時間
+  // 取得全站專注時間
   useEffect(() => {
     const fetchGlobalStats = async () => {
       try {
@@ -145,7 +172,7 @@ export default function SocialPanel() {
   const statusConfig = getStatusConfig();
 
   return (
-    <div className="flex flex-col gap-6 p-6 h-full rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl ">
+    <div className="flex flex-col gap-6 p-6 h-full max-h-[70vh] lg:max-h-screen rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl ">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-5">
           <div className="text-sm xl:text-base font-bold tracking-[0.2em] text-slate-500">
@@ -199,13 +226,11 @@ export default function SocialPanel() {
 
         {/* 點擊切換 聊天室 / 使用者列表 */}
         <ActionIconButton
+          id="chat-toggle-btn"
           className={`relative p-2 transition-colors ${
             isChatRoomOpen ? 'text-[#ffb347]' : 'text-slate-400 hover:text-[#ffb347]'
           }`}
           onClick={() => {
-            if (!isChatRoomOpen) {
-              clearUnread();
-            }
             setIsChatRoomOpen(!isChatRoomOpen);
           }}
         >
@@ -244,7 +269,7 @@ export default function SocialPanel() {
               <span>以使用聊天室</span>
             </div>
           ) : (
-            <MessageArea shouldFocus={isChatRoomOpen} />
+            <MessageArea shouldFocus={isChatRoomOpen} ref={HistoryRef} />
           )}
         </div>
       </div>

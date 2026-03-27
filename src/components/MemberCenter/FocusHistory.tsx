@@ -29,7 +29,7 @@ export default function FocusHistory() {
       });
     });
 
-    // 轉換格式： 125 -> "2h 5m"
+    // 轉換格式 把分鐘 轉成 小時 / 分鐘
     const format = (s: number) => {
       const h = Math.floor(s / 3600);
       const m = Math.floor((s % 3600) / 60);
@@ -59,23 +59,23 @@ export default function FocusHistory() {
       {/* --- 數據總覽 --- */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-[#1e2433] rounded-2xl p-8 border border-slate-700/50 flex flex-col items-center justify-center">
-          <div className=" text-slate-400 font-medium tracking-wider mb-2 uppercase">
-            今日專注 (Today&apos;s Focus)
+          <div className=" text-xl text-slate-400 font-medium tracking-wider mb-2 whitespace-nowrap">
+            今日專注
           </div>
-          <div className="text-4xl font-bold text-orange-400">{stats.today}</div>
+          <div className="text-2xl sm:text-4xl font-bold text-orange-400">{stats.today}</div>
         </div>
 
         <div className="bg-[#1e2433] rounded-2xl p-8 border border-slate-700/50 flex flex-col items-center justify-center">
-          <div className=" text-slate-400 font-medium tracking-wider mb-2 uppercase">
-            累積專注 (Total Focus)
+          <div className="text-xl text-slate-400 font-medium tracking-wider mb-2 whitespace-nowrap">
+            累積專注
           </div>
-          <div className="text-4xl font-bold text-orange-400">{stats.total}</div>
+          <div className="text-2xl sm:text-4xl font-bold text-orange-400">{stats.total}</div>
         </div>
       </div>
 
       {/* --- 專注紀錄 --- */}
-      <div className="bg-[#1e2433] rounded-2xl p-8 border border-slate-700/50 min-h-75">
-        <h3 className="text-3xl font-bold text-slate-200 mb-2">專注紀錄</h3>
+      <div className="bg-[#1e2433] rounded-2xl p-0 md:p-8 border border-slate-700/50 min-h-75 ">
+        <h3 className="text-3xl font-bold text-slate-200 my-6">專注紀錄</h3>
 
         {isLoadingHistory ? (
           <div className="flex justify-center items-center py-20 text-slate-500 text-2xl">
@@ -91,14 +91,14 @@ export default function FocusHistory() {
             {Object.entries(groupedHistory).map(([dateLabel, records]) => (
               <div key={dateLabel}>
                 {/* 日期分隔線 */}
-                <div className="flex items-center my-6">
+                <div className="flex items-center my-2">
                   <div className="grow border-t border-slate-700/30"></div>
                   <span className="mx-4 font-medium text-slate-500">{dateLabel}</span>
                   <div className="grow border-t border-slate-700/30"></div>
                 </div>
 
                 {/* 紀錄項目清單 */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-6">
                   {records.map((record) => (
                     <div
                       key={record.id}
@@ -113,7 +113,7 @@ export default function FocusHistory() {
                           {formatTimeRange(record.start_time, record.end_time)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center">
                         <span className="text-orange-400 font-medium">
                           {Math.floor(record.duration_seconds / 60)} min
                         </span>
@@ -122,7 +122,7 @@ export default function FocusHistory() {
                             e.stopPropagation();
                             deleteFocusRecord(record.id);
                           }}
-                          className="text-slate-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-4"
+                          className="text-slate-500 hover:text-red-500 transition-colors opacity-100 md:opacity-0 group-hover:opacity-100 p-4"
                         >
                           <Trash2 size={20} />
                         </ActionIconButton>

@@ -22,12 +22,21 @@ interface RawMessageData {
 }
 
 export function useChat(onNewMessage?: () => void) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const socketRef = useRef<WebSocket | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]); // 用來儲存訊息
+  const socketRef = useRef<WebSocket | null>(null); //
   const { user, profile } = useProfileContext();
   const [onlineUsers, setOnlineUsers] = useState<UserStatus[]>([]);
   const onlineUsersRef = useRef<UserStatus[]>([]);
   const [reconnectCount, setReconnectCount] = useState(0); // 記錄重連次數
+  const [lastReadMessageId, setLastReadMessageId] = useState<string | null>(null);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true); // 有更多歷史紀錄
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false); // 加載歷史紀錄中
+  const oldestMsgTimestampRef = useRef<string | null>(null);
+
+  const onNewMessageRef = useRef(onNewMessage);
+  useEffect(() => {
+    onNewMessageRef.current = onNewMessage;
+  }, [onNewMessage]);
 
   const currentAutoStatusRef = useRef(profile?.auto_status || '閒置中');
   const currentPrivacyModeRef = useRef(profile?.privacy_mode || 'Public');
@@ -93,8 +102,8 @@ export function useChat(onNewMessage?: () => void) {
           JSON.stringify({
             type: 'status_update',
             user_id: user?.id,
-            autoStatus: autoStatus || profile?.auto_status || '閒置中',
-            privacyMode: privacyMode || profile?.privacy_mode || 'Public',
+            autoStatus: autoStatus || currentAutoStatusRef.current,
+            privacyMode: privacyMode || currentPrivacyModeRef.current,
           }),
         );
       } else {
@@ -106,32 +115,57 @@ export function useChat(onNewMessage?: () => void) {
         privacy_mode: privacyMode,
       });
     },
-    [syncStatusToSupabase, user?.id, profile?.auto_status, profile?.privacy_mode],
+    [syncStatusToSupabase, user?.id],
   );
 
-  const fetchChatHistory = useCallback(async () => {
-    try {
-      if (!user?.id) return;
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*, profiles:user_id(display_name)')
-        .order('created_at', { ascending: true });
+  const fetchChatHistory = useCallback(
+    async (loadOlder = false) => {
+      // 如果沒有 user，或者正在載入舊訊息、沒有更多訊息了，就不要執行
+      if (!user?.id || (loadOlder && (!hasMoreHistory || isLoadingOlder))) return;
 
-      if (error) throw error;
-      if (data) {
-        const formatted = data.map((item) => processMessage(item as RawMessageData));
-        setMessages(formatted);
+      try {
+        if (loadOlder) setIsLoadingOlder(true);
+
+        // 由新到舊抓取 30 筆
+        let query = supabase
+          .from('messages')
+          .select('*, profiles:user_id(display_name)')
+          .order('created_at', { ascending: false })
+          .limit(30);
+
+        // 如果往上滑載入更多加上時間條件
+        if (loadOlder && oldestMsgTimestampRef.current) {
+          query = query.lt('created_at', oldestMsgTimestampRef.current);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (data) {
+          // 如果抓回來的不到 30 筆 就不用再抓
+          if (data.length < 30) {
+            setHasMoreHistory(false);
+          }
+
+          // 因為是由新到舊抓，所以要把它反轉回正常的 由舊到新的 對話順序
+          const formatted = data.reverse().map((item) => processMessage(item as RawMessageData));
+
+          if (formatted.length > 0) {
+            // 記錄下這批資料最舊的時間戳，留給下次分頁用
+            oldestMsgTimestampRef.current = formatted[0].raw_timestamp;
+          }
+
+          // 如果是載入舊訊息，把舊資料塞在陣列前面；如果是初次載入，直接覆蓋
+          setMessages((prev) => (loadOlder ? [...formatted, ...prev] : formatted));
+        }
+      } catch (error) {
+        console.error('讀取紀錄失敗', error);
+      } finally {
+        if (loadOlder) setIsLoadingOlder(false);
       }
-    } catch (error) {
-      console.log('讀取紀錄失敗', error);
-    }
-  }, [user?.id, processMessage]);
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchChatHistory();
-    }
-  }, [fetchChatHistory, user?.id]);
+    },
+    [user?.id, processMessage, hasMoreHistory, isLoadingOlder],
+  );
 
   const [isManualOffline, setIsManualOffline] = useState(false);
 
@@ -169,10 +203,13 @@ export function useChat(onNewMessage?: () => void) {
     // ^ =從字串的最開頭比對, http = 要找的文字 'ws' = 要替換成的文字
     // 這一行 = 把 http://localhost:8000 替換成 ws://localhost:8000
     // 把 http 替換成 ws 是因為這是 webSocket 的專用連線方式
-    const webSocketUrl =
-      baseApiUrl.replace(/^http/, 'ws') +
-      `/api/chat?user_id=${user?.id || 'unknown'}&name=${encodeURIComponent(displayName)}&autoStatus=${encodeURIComponent(currentAutoStatus)}&privacyMode=${encodeURIComponent(currentPrivacyMode)}`;
+    let wsProtocol = 'ws://';
+    if (baseApiUrl.startsWith('https://')) {
+      wsProtocol = 'wss://';
+    }
+    const baseUrlWithoutProtocol = baseApiUrl.replace(/^https?:\/\//, '');
 
+    const webSocketUrl = `${wsProtocol}${baseUrlWithoutProtocol}/api/chat?user_id=${user?.id || 'unknown'}&name=${encodeURIComponent(displayName)}&autoStatus=${encodeURIComponent(currentAutoStatus)}&privacyMode=${encodeURIComponent(currentPrivacyMode)}`;
     // 建立一個真正的 WebSocket 連線實例 ， 且這會立即嘗試連線
     const socket = new WebSocket(webSocketUrl);
     let pongTimeout: NodeJS.Timeout;
@@ -185,8 +222,8 @@ export function useChat(onNewMessage?: () => void) {
         JSON.stringify({
           type: 'status_update',
           user_id: user?.id,
-          autoStatus: currentAutoStatusRef,
-          privacyMode: currentPrivacyModeRef,
+          autoStatus: currentAutoStatusRef.current,
+          privacyMode: currentPrivacyModeRef.current,
         }),
       );
     };
@@ -199,7 +236,7 @@ export function useChat(onNewMessage?: () => void) {
         pongTimeout = setTimeout(() => {
           console.warn('伺服器無回應，即將重新連線');
           socket.close();
-        }, 5000);
+        }, 15000);
       }
     }, 30000); // 30000 毫秒 = 30 秒送一次
 
@@ -212,11 +249,9 @@ export function useChat(onNewMessage?: () => void) {
       }
 
       if (parsedData.type === 'online_users') {
-        // 更新聊天室名單，不產生聊天訊息
         setOnlineUsers(parsedData.users);
         onlineUsersRef.current = parsedData.users;
       } else if (parsedData.type === 'status_update') {
-        // 更新單一使用者狀態，不產生聊天訊息
         setOnlineUsers((prev) => {
           const updatedUsers = prev.map((u) =>
             u.id === parsedData.user_id
@@ -226,8 +261,7 @@ export function useChat(onNewMessage?: () => void) {
           onlineUsersRef.current = updatedUsers;
           return updatedUsers;
         });
-      } else {
-        // 只有在是一般聊天訊息時，才去 processMessage 和 setMessages
+      } else if (parsedData.type === 'chat_message') {
         if (!parsedData.display_name && !parsedData.profiles) {
           const foundUser = onlineUsersRef.current.find((u) => u.id === parsedData.user_id);
           if (foundUser) parsedData.display_name = foundUser.name;
@@ -235,34 +269,31 @@ export function useChat(onNewMessage?: () => void) {
 
         const newMessage = processMessage(parsedData);
         setMessages((prev) => [...prev, newMessage]);
-        onNewMessage?.();
-      }
-    };
-    socket.onclose = () => {
-      // 如果不是我們手動按離線 而斷開的，就代表是意外斷線
-      if (!isManualOffline) {
-        console.warn('WebSocket 意外斷線，2秒後嘗試重新連線...');
-        setTimeout(() => {
-          setReconnectCount((prev) => prev + 1); // 觸發 useEffect 重新執行
-        }, 2000);
+        onNewMessageRef.current?.();
       }
     };
 
-    // 結束後就把連線關掉
+    socket.onclose = (event) => {
+      if (!isManualOffline) {
+        console.warn(`WebSocket 斷線 (Code: ${event.code})，2秒後重試...`);
+        const timer = setTimeout(() => {
+          setReconnectCount((prev) => prev + 1);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+      }
+    };
+    socket.onerror = (error) => {
+      console.error('WebSocket 發生錯誤:', error);
+    };
+
     return () => {
       socket.onclose = null;
       socket.close();
       clearInterval(pingInterval);
       clearTimeout(pongTimeout);
     };
-  }, [
-    onNewMessage,
-    user?.id,
-    profile?.display_name,
-    processMessage,
-    isManualOffline,
-    reconnectCount,
-  ]);
+  }, [user?.id, profile?.display_name, processMessage, isManualOffline, reconnectCount]);
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -281,6 +312,47 @@ export function useChat(onNewMessage?: () => void) {
     [user],
   );
 
+  // 用來從後端取得已讀資料
+  const fetchReadStatus = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/read-status/${user.id}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setLastReadMessageId(data.last_read_message_id);
+      }
+    } catch (error) {
+      console.error('取得已讀紀錄失敗', error);
+    }
+  }, [user?.id]);
+  // 更新已讀資料
+  const updateReadStatus = useCallback(
+    async (messageId: string) => {
+      if (!user?.id || lastReadMessageId === messageId) return;
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/read-status/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.id, message_id: messageId }),
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          setLastReadMessageId(messageId);
+        }
+      } catch (error) {
+        console.error('更新已讀資料失敗', error);
+      }
+    },
+    [user?.id, lastReadMessageId],
+  );
+  useEffect(() => {
+    if (user?.id) {
+      fetchChatHistory();
+      fetchReadStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, fetchReadStatus]);
+
   return {
     messages,
     sendMessage,
@@ -289,5 +361,9 @@ export function useChat(onNewMessage?: () => void) {
     updateStatus,
     disconnectChat,
     reconnectChat,
+    hasMoreHistory,
+    isLoadingOlder,
+    lastReadMessageId,
+    updateReadStatus,
   };
 }

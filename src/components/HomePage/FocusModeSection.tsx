@@ -1,5 +1,7 @@
 import { Headphones, LucideIcon, Sparkles, Timer } from 'lucide-react';
-import Image from 'next/image';
+import { useState } from 'react';
+import { TimerConfigPanelUI, TimerKey } from '../Timer/TimerConfigPanel';
+import type { TimerComboType } from '@/src/hooks/useTimer';
 
 interface Props {
   Icon: LucideIcon;
@@ -23,6 +25,47 @@ function FocusModeItem({ Icon, iconClassName, title, description }: Props) {
 }
 
 export default function FocusModeSection() {
+  const [demoCombo, setDemoCombo] = useState<TimerComboType>('iCares');
+  const [demoConfigs, setDemoConfigs] = useState({
+    workTimeMinutes: 20,
+    shortRestTimeSeconds: 20,
+    longRestTimeMinutes: 20,
+    roundsToLongRest: 5,
+  });
+  const [demoReplay, setDemoReplay] = useState(true);
+  // 模擬模式切換的假邏輯
+  const handleDemoApplyCombo = (combo: TimerComboType) => {
+    setDemoCombo(combo);
+    if (combo === 'iCares') {
+      setDemoConfigs({
+        workTimeMinutes: 20,
+        shortRestTimeSeconds: 10,
+        longRestTimeMinutes: 20,
+        roundsToLongRest: 5,
+      });
+      setDemoReplay(true);
+    } else if (combo === 'TomatoClock') {
+      setDemoConfigs({
+        workTimeMinutes: 25,
+        shortRestTimeSeconds: 300,
+        longRestTimeMinutes: 15,
+        roundsToLongRest: 4,
+      });
+      setDemoReplay(false);
+    } else if (combo === 'Immersion') {
+      setDemoConfigs({
+        workTimeMinutes: 20,
+        shortRestTimeSeconds: 20,
+        longRestTimeMinutes: 20,
+        roundsToLongRest: 5,
+      });
+      setDemoReplay(false);
+    }
+  };
+
+  const handleDemoUpdateDuration = (key: TimerKey, newValue: number) => {
+    setDemoConfigs((prev) => ({ ...prev, [key]: newValue }));
+  };
   const items = [
     {
       Icon: Headphones,
@@ -38,7 +81,7 @@ export default function FocusModeSection() {
     },
   ];
   return (
-    <section className="min-h-screen py-20 flex flex-col justify-center max-w-7xl mx-auto px-6 md:px-12">
+    <section className="min-h-screen py-20 flex flex-col justify-center max-w-7xl mx-auto md:px-8">
       <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 w-full">
         <div className="w-full lg:w-5/12 space-y-8">
           <div className="space-y-4">
@@ -80,19 +123,19 @@ export default function FocusModeSection() {
           </div>
         </div>
 
-        {/* UI 展示圖 */}
-        <div className="w-full lg:w-7/12 flex flex-col items-center justify-center">
-          <div className="w-full max-w-xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative group bg-[#0f141f]">
-            <Image
-              src="/settingPanel.png"
-              alt="Focus Modes Interface"
-              width={1000}
-              height={1000}
-              className="w-full h-auto opacity-100 "
-            />
+        {/* UI 展示 */}
+        <div className="w-full lg:w-7/12 flex flex-col items-center justify-center relative">
+          <div className="absolute inset-0 bg-linear-to-r from-[#ffb347]/10 via-transparent to-blue-500/10 pointer-events-none z-0 blur-3xl"></div>
 
-            {/* 漸層光暈 */}
-            <div className="absolute inset-0 bg-linear-to-r from-[#ffb347]/5 via-transparent to-blue-500/5 pointer-events-none z-10"></div>
+          <div className="relative z-10 w-full flex justify-center transform scale-100 md:scale-110 lg:scale-130 xl:scale-150">
+            <TimerConfigPanelUI
+              timerCombo={demoCombo}
+              timerDurationConfigs={demoConfigs}
+              isReplay={demoReplay}
+              onApplyCombo={handleDemoApplyCombo}
+              onUpdateDuration={handleDemoUpdateDuration}
+              onToggleReplay={setDemoReplay}
+            />
           </div>
         </div>
       </div>

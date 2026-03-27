@@ -6,6 +6,7 @@ interface Props {
   disabled?: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  id?: string;
 }
 export default function ActionIconButton({
   onClick,

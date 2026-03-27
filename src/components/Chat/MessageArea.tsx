@@ -1,3 +1,4 @@
+import { forwardRef } from 'react'; // forwardRef = 讓父層可以操作子層的 div 或 input
 import MessageHistory from './MessageHistory';
 import MessageInput from './MessageInput';
 import { useChatContext } from '@/src/contexts/ChatContext';
@@ -6,11 +7,23 @@ interface Props {
   shouldFocus?: boolean;
 }
 
-export default function MessageArea({ shouldFocus }: Props) {
-  const { messages, sendMessage } = useChatContext();
+//  這個 ref 指向的是 HTMLDivElement ,
+const MessageArea = forwardRef<HTMLDivElement, Props>(({ shouldFocus }, ref) => {
+  const {
+    messages,
+    sendMessage,
+    lastReadMessageId,
+    updateReadStatus,
+    fetchChatHistory,
+    hasMoreHistory,
+    isLoadingOlder,
+  } = useChatContext();
 
   return (
-    <div className="flex flex-col h-full w-full rounded-3xl bg-white/5 border border-white/10 overflow-hidden">
+    <div
+      ref={ref}
+      className="flex flex-col h-full w-full rounded-3xl bg-white/5 border border-white/10 overflow-y-auto"
+    >
       {/* 標題列 */}
       <div className="shrink-0 p-4 bg-black/20 flex items-center justify-between">
         <div className="text-sm font-bold tracking-widest text-slate-400">FOCUS CHAT</div>
@@ -18,7 +31,15 @@ export default function MessageArea({ shouldFocus }: Props) {
 
       {/* 歷史訊息 */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4">
-        <MessageHistory messageHistoryList={messages} shouldFocus={shouldFocus} />
+        <MessageHistory
+          messageHistoryList={messages}
+          shouldFocus={shouldFocus}
+          lastReadMessageId={lastReadMessageId}
+          updateReadStatus={updateReadStatus}
+          onLoadOlder={() => fetchChatHistory(true)}
+          hasMoreHistory={hasMoreHistory}
+          isLoadingOlder={isLoadingOlder}
+        />
       </div>
 
       {/* 輸入框 */}
@@ -27,4 +48,8 @@ export default function MessageArea({ shouldFocus }: Props) {
       </div>
     </div>
   );
-}
+});
+
+MessageArea.displayName = 'MessageArea';
+
+export default MessageArea;
