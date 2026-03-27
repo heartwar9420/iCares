@@ -46,7 +46,7 @@ export default function OnlineUserList({ userList }: OnlineUserListProps) {
                   />
                 </div>
 
-                {/* 只有公開上線才顯示綠點 */}
+                {/* 只有公開連線才顯示綠點 */}
                 {isActuallyOnline && (
                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#0a0e17] rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
                 )}

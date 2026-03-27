@@ -70,16 +70,16 @@ export default function LandingPage() {
           <HomePageButton />
 
           {!isLoggedIn ? (
-            <div className="flex gap-10">
+            <div className="flex gap-5">
               <div className="flex">
                 <ActionIconButton
                   onClick={() => {
                     setIsAuthModalOpen(true);
                     setInitialMode('signin');
                   }}
-                  className="flex items-center bg-[#ffb347] hover:bg-orange-500 text-[#0a0e17] px-5 py-2 rounded-full text-sm font-bold transition"
+                  className="flex items-center bg-[#ffb347] hover:bg-orange-500 text-[#0a0e17] px-2 py-2 text-xs md:px-5 md:py-2 rounded-full md:text-sm font-bold transition"
                 >
-                  <LogIn className="mr-3" />
+                  <LogIn className="mr-3" size={16} />
                   登入
                 </ActionIconButton>
               </div>
@@ -89,9 +89,9 @@ export default function LandingPage() {
                     setIsAuthModalOpen(true);
                     setInitialMode('signup');
                   }}
-                  className="flex items-center bg-[#ffb347] hover:bg-orange-500 text-[#0a0e17] px-5 py-2 rounded-full text-sm font-bold transition"
+                  className="flex items-center bg-[#ffb347] hover:bg-orange-500 text-[#0a0e17] px-2 py-2 text-xs md:px-5 md:py-2 rounded-full md:text-sm font-bold transition"
                 >
-                  <UserPlus className="mr-3" />
+                  <UserPlus className="mr-3" size={16} />
                   註冊
                 </ActionIconButton>
               </div>
@@ -110,7 +110,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-8 pt-24">
+      <main className="max-w-7xl mx-auto md:px-8 px-4 pt-24">
         <HeroSections />
 
         <ScrollReveal direction="left">

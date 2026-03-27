@@ -110,7 +110,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       const { status, data } = await res.json();
 
       if (status === 'success' && data) {
-        setMode(data.mode);
+        setMode(data.mode || 'work');
 
         // 如果正在倒數中
         if (data.is_running && data.target_end_time) {
@@ -136,7 +136,8 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
           }
         } else {
           // 如果不是正在倒數中
-          setRemainingSeconds(data.remaining_seconds);
+          const safeSeconds = Number(data.remaining_seconds) || 0; //為了不要顯示出 nan 強制把拿到的資料轉成Number
+          setRemainingSeconds(safeSeconds);
           setIsTimerRunning(false);
           targetEndTimeRef.current = null;
         }

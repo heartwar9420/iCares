@@ -32,7 +32,7 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
   // }, [value, timeKey, onUpdate]);
   return (
     <div
-      className={`flex items-center justify-between gap-4 group transition-opacity ${isDisabled ? 'opacity-40' : 'opacity-100'}`}
+      className={`flex items-center justify-between gap-1 md:gap-4 group transition-opacity ${isDisabled ? 'opacity-40' : 'opacity-100'}`}
     >
       {/* 標題 */}
       <div className="text-[12px] sm:text-sm font-medium text-slate-400 w-18 group-hover:text-slate-300 transition-colors shrink-0">
@@ -142,7 +142,7 @@ export const TimerConfigPanelUI = ({
   };
 
   return (
-    <div className="bg-[#0a0e17]/95 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl z-50 rounded-3xl p-6 w-full max-w-[420px] flex flex-col gap-6">
+    <div className="bg-[#0a0e17]/95 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl z-50 rounded-3xl p-6 w-full max-w-105 flex flex-col gap-6">
       {/* 模式選擇按鈕 */}
       <div className="flex gap-2 bg-black/20 p-1.5 rounded-2xl border border-white/5">
         <button className={getModeBtnClass('iCares')} onClick={() => onApplyCombo('iCares')}>
@@ -199,24 +199,24 @@ export const TimerConfigPanelUI = ({
 
       {/* 神經重放模式切換 */}
       <div
-        className={`flex items-center justify-between gap-4 pt-4 border-t border-white/5 transition-opacity ${isInputsLocked ? 'opacity-40' : 'opacity-100'}`}
+        className={`flex items-center justify-between pt-4 border-t border-white/5 transition-opacity ${isInputsLocked ? 'opacity-40' : 'opacity-100'}`}
       >
         <div className="text-sm font-medium text-slate-400 w-32">神經重放模式</div>
         <div className="flex flex-1 items-center gap-6">
-          <button
+          <ActionIconButton
             disabled={isInputsLocked}
             onClick={() => onToggleReplay(true)}
             className={`flex items-center gap-2 text-sm transition-colors ${isReplay ? 'text-[#ffb347]' : 'text-slate-500 hover:text-slate-300'} ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
           >
             {isReplay ? <SquareCheck size={18} /> : <Square size={18} />} <span>開啟</span>
-          </button>
-          <button
+          </ActionIconButton>
+          <ActionIconButton
             disabled={isInputsLocked}
             onClick={() => onToggleReplay(false)}
             className={`flex items-center gap-2 text-sm transition-colors ${!isReplay ? 'text-slate-200' : 'text-slate-500 hover:text-slate-300'} ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
           >
             {!isReplay ? <SquareCheck size={18} /> : <Square size={18} />} <span>關閉</span>
-          </button>
+          </ActionIconButton>
         </div>
       </div>
     </div>
@@ -266,9 +266,8 @@ export default function TimerConfigPanel() {
   return (
     <div
       ref={panelRef}
-      className="absolute  -bottom-70 sm:-bottom-80 right-0 mb-4 z-50 w-[90vw] max-w-105 "
+      className="absolute -bottom-70 sm:-bottom-80 right-0 mb-4 z-50 w-[90vw] max-w-105 "
     >
-      {' '}
       <TimerConfigPanelUI
         timerCombo={timerCombo}
         timerDurationConfigs={timerDurationConfigs}

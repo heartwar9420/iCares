@@ -65,13 +65,12 @@ export default function FocusMatrix() {
           const hours = Math.floor(totalMinutes / 60);
           const mins = totalMinutes % 60;
           const timeString = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-
           return (
             <div key={cell.id} className="relative group w-full h-full cursor-pointer">
               {/* 負責背景色、hover 變色與呼吸燈效果 */}
               <div
                 className={`w-full h-full rounded-xs transition-all duration-300
-                  ${isFocused ? `bg-current opacity-80 group-hover:opacity-100 ${cell.color || 'text-[#ffb347]'}` : 'bg-white/5 group-hover:bg-white/10'}
+                  ${isFocused ? `bg-current opacity-80 group-hover:opacity-100 ${cellColor}` : 'bg-white/5 group-hover:bg-white/10'}
                   ${isCurrentTimeCell ? `ring-1 ring-white shadow-[0_0_8px_rgba(255,255,255,0.8)] z-10 ${isTimerRunning ? 'animate-pulse' : ''}` : ''}
                 `}
               ></div>
