@@ -82,12 +82,16 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       currentMode: string,
     ) => {
       if (!user?.id) return;
+
+      // 保護機制：確保傳送的是整數，且不是 NaN
+      const safeRemaining = isNaN(currentRemaining) ? 0 : Math.round(currentRemaining);
+
       try {
         const payload = {
           user_id: user.id,
           action: action,
           mode: currentMode,
-          remaining_seconds: currentRemaining,
+          remaining_seconds: safeRemaining, // 使用處理過的數值
         };
 
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/timer/sync`, {
@@ -216,12 +220,20 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
 
   const startNewTimer = useCallback(
     async (targetMode = mode, targetConfigs = timerDurationConfigs) => {
+      if (!user?.id) return;
+
+      const workMin = targetConfigs?.workTimeMinutes ?? 20;
+      const shortSec = targetConfigs?.shortRestTimeSeconds ?? 20;
+      const longMin = targetConfigs?.longRestTimeMinutes ?? 20;
+      const roundsToRest = targetConfigs?.roundsToLongRest ?? 5;
+
       const apiParams = new URLSearchParams({
+        user_id: user.id,
         mode: targetMode,
-        work_time_minutes: String(targetConfigs.workTimeMinutes),
-        short_rest_time_seconds: String(targetConfigs.shortRestTimeSeconds),
-        long_rest_time_minutes: String(targetConfigs.longRestTimeMinutes),
-        rounds_to_long_rest: String(targetConfigs.roundsToLongRest),
+        work_time_minutes: String(workMin),
+        short_rest_time_seconds: String(shortSec),
+        long_rest_time_minutes: String(longMin),
+        rounds_to_long_rest: String(roundsToRest),
       });
 
       // const URLString = new URLSearchParams(apiParams).toString();
@@ -236,11 +248,18 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
         // fetchAPI
         const response = await fetch(URL);
         // 轉成json格式
-        const { data } = await response.json();
+        const result = await response.json();
+
+        if (!response.ok || !result.data) {
+          console.error('後端回傳錯誤或格式不正確:', result);
+          setIsTimerRunning(false);
+          return;
+        }
+        const { data } = result;
 
         setRemainingSeconds(data.duration_seconds);
         setMode(data.mode);
-        setCompletedRounds(data.completed_work_count || 0); //把後端傳來的次數接起來, 如果沒回傳就預設0
+        setCompletedRounds(data.completed_work_count || 0);
 
         targetEndTimeRef.current = Date.now() + data.duration_seconds * 1000; // 算出預計結束的時間
 
@@ -261,7 +280,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       }
     },
     // 當 底下的參數發生 改變時才需要重新產生此函式
-    [mode, timerDurationConfigs, syncTimerAction],
+    [mode, timerDurationConfigs, syncTimerAction, user?.id],
   );
   useEffect(() => {
     if (isTimerRunning && remainingSeconds === 0) {

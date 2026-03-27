@@ -170,28 +170,28 @@ export const TimerConfigPanelUI = ({
         <SettingRow
           label="專注時間 (分)"
           timeKey="workTimeMinutes"
-          value={timerDurationConfigs.workTimeMinutes}
+          value={timerDurationConfigs.workTimeMinutes ?? 20}
           onUpdate={onUpdateDuration}
           isDisabled={isInputsLocked}
         />
         <SettingRow
           label="短休息 (秒)"
           timeKey="shortRestTimeSeconds"
-          value={timerDurationConfigs.shortRestTimeSeconds}
+          value={timerDurationConfigs.shortRestTimeSeconds ?? 20}
           onUpdate={onUpdateDuration}
           isDisabled={isInputsLocked}
         />
         <SettingRow
           label="長休息 (分)"
           timeKey="longRestTimeMinutes"
-          value={timerDurationConfigs.longRestTimeMinutes}
+          value={timerDurationConfigs.longRestTimeMinutes ?? 20}
           onUpdate={onUpdateDuration}
           isDisabled={isInputsLocked}
         />
         <SettingRow
           label="循環次數 (回)"
           timeKey="roundsToLongRest"
-          value={timerDurationConfigs.roundsToLongRest}
+          value={timerDurationConfigs.roundsToLongRest ?? 5}
           onUpdate={onUpdateDuration}
           isDisabled={isInputsLocked}
         />

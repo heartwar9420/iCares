@@ -34,9 +34,9 @@ export default function FocusCore() {
 
   // 用一個物件把所有模式的時間對應好
   const timeConfigs = {
-    work: `${timerDurationConfigs.workTimeMinutes}:00`,
-    long_rest: `${timerDurationConfigs.longRestTimeMinutes}:00`,
-    rest: `00:${timerDurationConfigs.shortRestTimeSeconds}`,
+    work: `${timerDurationConfigs?.workTimeMinutes ?? 20}:00`,
+    long_rest: `${timerDurationConfigs?.longRestTimeMinutes ?? 20}:00`,
+    rest: `00:${timerDurationConfigs?.shortRestTimeSeconds ?? 20}`,
   };
 
   // 根據當前 mode 抓取對應時間，如果都沒有就給個預設值
@@ -157,8 +157,8 @@ export default function FocusCore() {
         {/* 計時器數字與狀態 */}
 
         <div className="text-center">
-          <TimerProgress progress={progressPercentage} size={400} strokeWidth={30}>
-            <div className="text-[80px] md:text-[110px] tracking-tight text-white font-mono">
+          <TimerProgress progress={progressPercentage} size={300} strokeWidth={30}>
+            <div className="text-[70px] sm:text-[90px] md:text-[100px] tracking-tight text-white font-mono">
               <>
                 {displayMinutes}
                 {/* animate-pulse = 呼吸燈 */}
