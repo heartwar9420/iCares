@@ -23,16 +23,17 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
     timeKey === 'roundsToLongRest' ? 10 : timeKey === 'shortRestTimeSeconds' ? 600 : 60;
 
   // 用來設定時間的最小值不可以低於1使用
-  // useEffect(() => {
-  //   return () => {
-  //     if (value < 1) {
-  //       onUpdate(timeKey, 1);
-  //     }
-  //   };
-  // }, [value, timeKey, onUpdate]);
+  useEffect(() => {
+    return () => {
+      if (value < 1) {
+        onUpdate(timeKey, 1);
+      }
+    };
+  }, [value, timeKey, onUpdate]);
+
   return (
     <div
-      className={`flex items-center justify-between gap-1 md:gap-4 group transition-opacity ${isDisabled ? 'opacity-40' : 'opacity-100'}`}
+      className={`flex items-center justify-between gap-1 md:gap-4 group transition-opacity ${isDisabled ? 'opacity-60' : 'opacity-100'}`}
     >
       {/* 標題 */}
       <div className="text-[12px] sm:text-sm font-medium text-slate-400 w-18 group-hover:text-slate-300 transition-colors shrink-0">
@@ -40,7 +41,7 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
       </div>
 
       {/* 控制區 */}
-      <div className="flex flex-1 items-center gap-1.5 sm:gap-3">
+      <div className="flex flex-1 items-center gap-1 sm:gap-3">
         {/* 減號 */}
         <ActionIconButton
           className="p-1 text-slate-500 hover:text-[#ffb347] transition-colors"
@@ -144,7 +145,7 @@ export const TimerConfigPanelUI = ({
   return (
     <div className="bg-[#0a0e17]/95 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl z-50 rounded-3xl p-6 w-full max-w-105 flex flex-col gap-6">
       {/* 模式選擇按鈕 */}
-      <div className="flex gap-2 bg-black/20 p-1.5 rounded-2xl border border-white/5">
+      <div className="flex gap-2 bg-black/20 p-1 md:p-2 rounded-2xl border border-white/5">
         <button className={getModeBtnClass('iCares')} onClick={() => onApplyCombo('iCares')}>
           iCares
         </button>
@@ -266,7 +267,7 @@ export default function TimerConfigPanel() {
   return (
     <div
       ref={panelRef}
-      className="absolute -bottom-70 sm:-bottom-80 right-0 mb-4 z-50 w-[90vw] max-w-105 "
+      className="absolute -bottom-60 sm:-bottom-75 -right-5 sm:-left-85 mb-4 z-50 min-w-0 max-w-105"
     >
       <TimerConfigPanelUI
         timerCombo={timerCombo}

@@ -1,11 +1,12 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
 import { useTimerContext } from '@/src/contexts/TimerContext';
 import TimerSettingButton from '../Timer/TimerSettingButton';
 import TimerConfigPanel from '../Timer/TimerConfigPanel';
 import FocusMatrix from '../Stats/FocusMatrix';
 import TimerProgress from '../Timer/TimerProgress';
+import ActionIconButton from '../UI/ActionIconButton';
+import { TimerReset } from 'lucide-react';
 
 export default function FocusCore() {
   const {
@@ -62,59 +63,6 @@ export default function FocusCore() {
   // 只有在剩餘時間 = 0 且 時間沒有倒數中 才會顯示 '準備開始'
   const statusMessage = remainingSeconds === 0 && !isTimerRunning ? '準備開始' : currentModeText;
 
-  // 把時間存到 timeRef 中 預設是0
-  const timeRef = useRef(0);
-
-  // 是否 震動
-  const [isShaking, setIsShaking] = useState(false);
-
-  // 用來取消計時器
-  const timerIdRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleMouseDown = () => {
-    // 把 現在的時間存到 timeRef 中
-    timeRef.current = new Date().getTime();
-
-    // 在按下的同時設定一個 1 秒後的定時器，時間到了之後就開始震動
-    timerIdRef.current = setTimeout(() => {
-      setIsShaking(true);
-    }, 1000);
-  };
-
-  const handleMouseUp = () => {
-    const now_time = new Date();
-    // 用現在時間 算出時間差
-    const timeDelta = now_time.getTime() - timeRef.current;
-
-    // 如果有定時器的話 在放開滑鼠時 清理定時器
-    if (timerIdRef.current) {
-      clearTimeout(timerIdRef.current);
-      timerIdRef.current = null;
-    }
-    // 關閉震動
-    setIsShaking(false);
-
-    if (timeDelta > 1000) {
-      resetTimer(); // 長按大於 1 秒重置
-    } else {
-      toggleTimer(); // 短按小於 1 秒切換暫停/開始
-    }
-  };
-
-  // 防呆用 如果使用者按下 button 之後 把滑鼠移開 , 不論在哪放開 都要把 計時器取消 並 取消震動
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      if (timerIdRef.current) {
-        clearTimeout(timerIdRef.current);
-      }
-      setIsShaking(false);
-    };
-    window.addEventListener('mouseup', handleGlobalMouseUp);
-    return () => {
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
-    };
-  }, []);
-
   // 計算圓的百分比
   let totalSeconds = 0;
   totalSeconds = Number(totalSeconds) || 0;
@@ -151,14 +99,13 @@ export default function FocusCore() {
   });
 
   return (
-    <div className="flex flex-col items-center justify-between relative min-h-0">
+    <div className="flex flex-col items-center justify-between relative min-h-0 w-full h-full overflow-y-auto custom-scrollbar">
       {/* 計時區塊 */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full ">
-        {/* 計時器數字與狀態 */}
-
+      <div className="flex flex-col flex-1 items-center justify-center w-full ">
+        {/* 計時器數字 */}
         <div className="text-center">
           <TimerProgress progress={progressPercentage} size={300} strokeWidth={30}>
-            <div className="text-[70px] sm:text-[90px] md:text-[100px] tracking-tight text-white font-mono">
+            <div className="text-[70px] sm:text-[90px] md:text-[110px] tracking-tight text-white font-mono">
               <>
                 {displayMinutes}
                 {/* animate-pulse = 呼吸燈 */}
@@ -171,48 +118,50 @@ export default function FocusCore() {
               </>
             </div>
           </TimerProgress>
-
-          <div className="h-4 flex flex-col items-center justify-center mt-2 transition-all">
-            {isReplayingNow && mode === 'work' && isTimerRunning ? (
-              <p className="text-blue-400 font-bold text-lg tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">
-                神經重放中，請閉眼10秒
-              </p>
-            ) : (
-              <p className="text-slate-500 font-bold text-lg tracking-[0.4em]">
-                當前階段：{statusMessage}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-2">{dots}</div>
         </div>
+        {/* 計時器狀態 */}
+        <div className="h-4 flex flex-col items-center justify-center mt-2 transition-all">
+          {isReplayingNow && mode === 'work' && isTimerRunning ? (
+            <p className="text-blue-400 font-bold text-lg tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">
+              神經重放中，請閉眼10秒
+            </p>
+          ) : (
+            <p className="text-slate-500 font-bold text-lg tracking-[0.4em]">
+              當前階段：{statusMessage}
+            </p>
+          )}
+        </div>
+        {/* 進度點點 */}
+        <div className="flex items-center justify-center gap-2 my-2">{dots}</div>
 
-        <div className="mt-14 flex items-center justify-center gap-6">
-          {/* 隱形佔位符讓主按鈕能置中 */}
-          <div className="w-12"></div>
+        {/* 三個btn */}
+        <div className="my-4 flex items-center justify-center text-center gap-6">
+          {/* 重置按鈕 */}
+          <ActionIconButton onClick={resetTimer}>
+            <TimerReset
+              className={`w-10 h-10 text-slate-500 hover:text-white transition-colors duration-200 opacity-0 ${isTimerRunning || remainingSeconds > 0 ? 'opacity-100' : ''}`}
+            />
+          </ActionIconButton>
 
           {/* 主按鈕 */}
-          <button
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            className="group relative cursor-pointer shrink-0"
-          >
+          <ActionIconButton onClick={toggleTimer} className="flex group relative shrink-0">
             {/* 外邊框 */}
             <div
               className={`absolute -inset-1 rounded-full blur opacity-60 group-hover:opacity-90 transition duration-500 group-hover:duration-200
                 // bg-linear-to-r = 從左到右線性漸層
-      ${isTimerRunning ? 'bg-linear-to-r from-red-500 to-rose-600' : 'bg-linear-to-r from-[#ffb347] to-orange-600'}`}
+                ${isTimerRunning ? 'bg-linear-to-r from-red-500 to-rose-600' : 'bg-linear-to-r from-[#ffb347] to-orange-600'}`}
             ></div>
 
             <div
-              className={`relative px-16 py-5 rounded-full font-bold text-xl tracking-[0.25rem] hover:scale-105 active:scale-95 transition-all duration-300 ${isShaking ? 'animate-shake' : ''}
-      ${isTimerRunning ? 'bg-red-500 text-white]' : 'bg-[#ffb347] text-[#0a0e17]]'}`}
+              className={`relative px-8 md:px-16 py-2 md:py-5 rounded-full font-bold text-xl tracking-[0.25rem] hover:scale-105 active:scale-95 transition-all duration-300
+              ${isTimerRunning ? 'bg-red-500 text-white]' : 'bg-[#ffb347] text-[#0a0e17]]'}`}
             >
               {isTimerRunning ? '暫停專注' : isInitialState ? '開始專注' : '繼續專注'}
             </div>
-          </button>
+          </ActionIconButton>
 
           {/* 設定按鈕 & Panel */}
-          <div className="relative group w-12 h-12 flex items-center justify-center shrink-0">
+          <div className="relative group flex items-center justify-center shrink-0">
             <TimerSettingButton />
 
             {/* 提示文字 (Tooltip) */}
@@ -230,14 +179,10 @@ export default function FocusCore() {
             <TimerConfigPanel />
           </div>
         </div>
-
-        <p className="mt-6 mb-10 lg:mb-0 text-base text-slate-500 tracking-wider">
-          長按按鈕 1 秒可重置計時器
-        </p>
       </div>
 
       {/* 熱力圖 */}
-      <div className="w-full shrink-0 h-60 min-h-60 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-xl p-4 flex ">
+      <div className="w-full max-w-5xl shrink-0 min-h-60 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-xl p-4 flex ">
         <FocusMatrix />
       </div>
     </div>

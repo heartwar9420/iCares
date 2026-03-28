@@ -47,20 +47,6 @@ body {
   background: rgba(255, 179, 71, 0.5);
 }
 
-/* 震動的動作 */
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateX(-2px) rotate(-1deg);
-  }
-  75% {
-    transform: translateX(2px) rotate(1deg);
-  }
-}
-
 /* 建立 Class */
 .animate-shake {
   animation: shake 0.2s ease-in-out infinite;
