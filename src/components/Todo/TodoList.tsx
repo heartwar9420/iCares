@@ -32,7 +32,7 @@ export default function TodoList() {
     handleDragEnd,
   } = useTodoContext();
   return (
-    <div className="flex flex-col h-full bg-white/5 border border-white/10 rounded-3xl p-6 overflow-hidden min-h-0 flex-1">
+    <div className="flex flex-col h-full bg-white/5 border border-white/10 rounded-3xl p-6 overflow-hidden min-h-0 flex-1 max-h-[70vh]">
       {/* 標題 */}
       <div className="text-lg font-bold tracking-widest text-slate-500 uppercase mb-4 shrink-0">
         待辦事項
