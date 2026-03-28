@@ -267,7 +267,7 @@ export default function TimerConfigPanel() {
   return (
     <div
       ref={panelRef}
-      className="absolute -bottom-70 sm:-bottom-80 right-0 mb-4 z-50 w-[90vw] max-w-105 "
+      className="absolute -bottom-70 sm:-bottom-75 -left-85 mb-4 z-50 w-[90vw] max-w-105"
     >
       <TimerConfigPanelUI
         timerCombo={timerCombo}

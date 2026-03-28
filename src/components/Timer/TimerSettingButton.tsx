@@ -15,10 +15,7 @@ export default function TimerSettingButton() {
           setIsTimerConfigOpen(!isTimerConfigOpen);
         }}
       >
-        <Settings
-          size={48}
-          className="text-slate-500 hover:text-white transition-colors duration-200"
-        />
+        <Settings className="w-10 h-10 text-slate-500 hover:text-white transition-colors duration-200" />
       </ActionIconButton>
     </div>
   );

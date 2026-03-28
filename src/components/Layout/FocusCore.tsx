@@ -1,6 +1,5 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
 import { useTimerContext } from '@/src/contexts/TimerContext';
 import TimerSettingButton from '../Timer/TimerSettingButton';
 import TimerConfigPanel from '../Timer/TimerConfigPanel';
@@ -100,13 +99,13 @@ export default function FocusCore() {
   });
 
   return (
-    <div className="flex flex-col items-center justify-between relative min-h-0">
+    <div className="flex flex-col items-center justify-between relative min-h-0 w-full h-full overflow-y-auto custom-scrollbar">
       {/* 計時區塊 */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full ">
-        {/* 計時器數字與狀態 */}
+      <div className="flex flex-col flex-1 items-center justify-center w-full ">
+        {/* 計時器數字 */}
         <div className="text-center">
           <TimerProgress progress={progressPercentage} size={300} strokeWidth={30}>
-            <div className="text-[70px] sm:text-[90px] md:text-[100px] tracking-tight text-white font-mono">
+            <div className="text-[70px] sm:text-[90px] md:text-[110px] tracking-tight text-white font-mono">
               <>
                 {displayMinutes}
                 {/* animate-pulse = 呼吸燈 */}
@@ -119,27 +118,28 @@ export default function FocusCore() {
               </>
             </div>
           </TimerProgress>
-
-          <div className="h-4 flex flex-col items-center justify-center mt-2 transition-all">
-            {isReplayingNow && mode === 'work' && isTimerRunning ? (
-              <p className="text-blue-400 font-bold text-lg tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">
-                神經重放中，請閉眼10秒
-              </p>
-            ) : (
-              <p className="text-slate-500 font-bold text-lg tracking-[0.4em]">
-                當前階段：{statusMessage}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-5">{dots}</div>
         </div>
+        {/* 計時器狀態 */}
+        <div className="h-4 flex flex-col items-center justify-center mt-2 transition-all">
+          {isReplayingNow && mode === 'work' && isTimerRunning ? (
+            <p className="text-blue-400 font-bold text-lg tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">
+              神經重放中，請閉眼10秒
+            </p>
+          ) : (
+            <p className="text-slate-500 font-bold text-lg tracking-[0.4em]">
+              當前階段：{statusMessage}
+            </p>
+          )}
+        </div>
+        {/* 進度點點 */}
+        <div className="flex items-center justify-center gap-2 my-2">{dots}</div>
 
-        <div className="my-5 flex items-center justify-center text-center gap-6">
+        {/* 三個btn */}
+        <div className="my-4 flex items-center justify-center text-center gap-6">
           {/* 重置按鈕 */}
           <ActionIconButton onClick={resetTimer}>
             <TimerReset
-              size={48}
-              className={`text-slate-500 opacity-0  ${isTimerRunning || remainingSeconds > 0 ? 'opacity-100' : ''}`}
+              className={`w-10 h-10 text-slate-500 hover:text-white transition-colors duration-200 opacity-0 ${isTimerRunning || remainingSeconds > 0 ? 'opacity-100' : ''}`}
             />
           </ActionIconButton>
 
@@ -153,7 +153,7 @@ export default function FocusCore() {
             ></div>
 
             <div
-              className={`relative px-16 py-5 rounded-full font-bold text-xl tracking-[0.25rem] hover:scale-105 active:scale-95 transition-all duration-300
+              className={`relative px-8 md:px-16 py-2 md:py-5 rounded-full font-bold text-xl tracking-[0.25rem] hover:scale-105 active:scale-95 transition-all duration-300
               ${isTimerRunning ? 'bg-red-500 text-white]' : 'bg-[#ffb347] text-[#0a0e17]]'}`}
             >
               {isTimerRunning ? '暫停專注' : isInitialState ? '開始專注' : '繼續專注'}
@@ -161,7 +161,7 @@ export default function FocusCore() {
           </ActionIconButton>
 
           {/* 設定按鈕 & Panel */}
-          <div className="relative group w-12 h-12 flex items-center justify-center shrink-0">
+          <div className="relative group flex items-center justify-center shrink-0">
             <TimerSettingButton />
 
             {/* 提示文字 (Tooltip) */}
@@ -182,7 +182,7 @@ export default function FocusCore() {
       </div>
 
       {/* 熱力圖 */}
-      <div className="w-full shrink-0 h-60 min-h-60 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-xl p-4 flex ">
+      <div className="w-full max-w-5xl shrink-0 min-h-60 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-xl p-4 flex ">
         <FocusMatrix />
       </div>
     </div>
