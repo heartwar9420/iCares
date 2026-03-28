@@ -23,16 +23,17 @@ const SettingRow = ({ label, timeKey, value, onUpdate, isDisabled }: Props) => {
     timeKey === 'roundsToLongRest' ? 10 : timeKey === 'shortRestTimeSeconds' ? 600 : 60;
 
   // 用來設定時間的最小值不可以低於1使用
-  // useEffect(() => {
-  //   return () => {
-  //     if (value < 1) {
-  //       onUpdate(timeKey, 1);
-  //     }
-  //   };
-  // }, [value, timeKey, onUpdate]);
+  useEffect(() => {
+    return () => {
+      if (value < 1) {
+        onUpdate(timeKey, 1);
+      }
+    };
+  }, [value, timeKey, onUpdate]);
+
   return (
     <div
-      className={`flex items-center justify-between gap-1 md:gap-4 group transition-opacity ${isDisabled ? 'opacity-40' : 'opacity-100'}`}
+      className={`flex items-center justify-between gap-1 md:gap-4 group transition-opacity ${isDisabled ? 'opacity-60' : 'opacity-100'}`}
     >
       {/* 標題 */}
       <div className="text-[12px] sm:text-sm font-medium text-slate-400 w-18 group-hover:text-slate-300 transition-colors shrink-0">

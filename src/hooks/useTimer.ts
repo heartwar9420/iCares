@@ -28,9 +28,9 @@ const DEFAULT_CONFIGS: Record<string, TimerConfig> = {
     roundsToLongRest: 4,
   },
   Immersion: {
-    workTimeMinutes: 0.1,
-    shortRestTimeSeconds: 3,
-    longRestTimeMinutes: 1,
+    workTimeMinutes: 20,
+    shortRestTimeSeconds: 20,
+    longRestTimeMinutes: 20,
     roundsToLongRest: 5,
   },
 };
