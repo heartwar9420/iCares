@@ -59,15 +59,16 @@ export default function FocusMatrix() {
       {/* 144 格區塊 */}
       <div className="flex-1 grid grid-rows-6 grid-flow-col gap-0.75 w-full">
         {gridCellsArray?.map((cell) => {
+          // 這個格子 是否 = 現在時間的格子？
           const isCurrentTimeCell = cell.id === liveCurrentCellId;
 
+          // 這個格子是否 = 正在進行中的專注間間區間 中？
           const isActivelyFocusingNow =
-            (isTimerRunning || remainingSeconds > 0) &&
-            mode === 'work' &&
-            startCellId !== null &&
-            liveCurrentCellId !== null &&
-            // 判斷條件：這格的 ID 大於等於起點，且小於等於現在的 ID
-            cell.id >= startCellId &&
+            (isTimerRunning || remainingSeconds > 0) && // 暫停時 or 開始時
+            mode === 'work' && // 且模式是 work
+            startCellId !== null && // 且 起始格子 != null
+            liveCurrentCellId !== null && // 且 現在的格子 != null
+            cell.id >= startCellId && // 且 這個格子在 起點之後 終點之前
             cell.id <= liveCurrentCellId;
 
           // 如果資料庫中顯示 專注中 或 現在正在專注 = isFocused
