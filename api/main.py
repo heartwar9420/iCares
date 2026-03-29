@@ -16,6 +16,7 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://i-cares.vercel.app",
+    "https://i-cares-develop.vercel.app",
 ]
 
 app.add_middleware(
@@ -26,19 +27,20 @@ app.add_middleware(
     allow_headers=["*"],  # 允許的標頭 ("*" 為全部)
 )
 
-completed_work_count = 0
+user_completed_count: Dict[str, int] = {}
 accumulated_work_seconds = 0
 
 
 @app.get("/api/timer")
 async def get_timer(
+    user_id: str,
     mode: str = "work",
     work_time_minutes: float = 20,
     short_rest_time_seconds: int = 20,
     long_rest_time_minutes: float = 20,
     rounds_to_long_rest: int = 5,
 ):
-    global completed_work_count
+    completed_work_count = user_completed_count.get(user_id, 0)
 
     final_mode = mode
 
@@ -62,6 +64,8 @@ async def get_timer(
 
     else:  # 工作時間
         seconds_value = work_time_seconds
+
+    user_completed_count[user_id] = completed_work_count
 
     timer_response = {
         "mode": final_mode,  # 告訴前端「最後決定」的模式

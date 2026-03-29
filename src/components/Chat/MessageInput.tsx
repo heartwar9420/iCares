@@ -44,12 +44,12 @@ export default function MessageInput({ onSendMessage, shouldFocus }: Props) {
           }
         }}
         placeholder="輸入訊息..."
-        className="flex-1 bg-transparent text-base text-slate-200 placeholder:text-slate-400 px-3 py-2 outline-none"
+        className="flex-1 min-w-0 bg-transparent text-base text-slate-200 placeholder:text-slate-400 px-3 py-2 outline-none"
       />
       <ActionIconButton
         onClick={handleSend}
         disabled={!hasText}
-        className={`p-2 px-3 rounded-lg transition-all duration-300 ${
+        className={`shrink-0 p-2 px-3 rounded-lg transition-all duration-300 ${
           hasText ? 'text-[#ffb347] bg-[#ffb347]/10' : 'text-slate-600 cursor-not-allowed'
         }`}
       >

@@ -330,7 +330,7 @@ export function useChat(onNewMessage?: () => void) {
     async (messageId: string) => {
       if (!user?.id || lastReadMessageId === messageId) return;
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/read-status/`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/read-status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.id, message_id: messageId }),
