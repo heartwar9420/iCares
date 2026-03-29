@@ -7,8 +7,9 @@ import { useTimerContext } from '@/src/contexts/TimerContext';
 
 export default function FocusMatrix() {
   const { gridCellsArray, activeColor, activeTaskName, activeIcon } = useFocusContext();
-  const { isTimerRunning, mode, remainingSeconds } = useTimerContext();
+  const { isTimerRunning, mode, remainingSeconds, timerDurationConfigs } = useTimerContext();
 
+  // 用來在儲存目前是時間哪一個格子
   const [liveCurrentCellId, setLiveCurrentCellId] = useState<number | null>(null);
 
   // 同步使用者的本地時間
@@ -19,12 +20,33 @@ export default function FocusMatrix() {
       const totalMinutes = now.getHours() * 60 + now.getMinutes();
       setLiveCurrentCellId(Math.floor(totalMinutes / 10));
     };
+
     updateTime();
 
     // 用 setInterval 每分鐘檢查一次，確保時間準確跨越格子
     const intervalTimer = setInterval(updateTime, 60000);
     return () => clearInterval(intervalTimer);
   }, []);
+
+  // 用來儲存哪一個是專注開始時的格子
+  let startCellId: number | null = null;
+  // 如果現在是work 且現在的時間格子 != null 且 得到時用者的時間設定
+  if (mode === 'work' && liveCurrentCellId !== null && timerDurationConfigs) {
+    // 算出總共要專注多久分鐘
+    const totalFocusSeconds = timerDurationConfigs.workTimeMinutes * 60;
+    // 算出現在已經專注多久了
+    const pastSeconds = totalFocusSeconds - remainingSeconds;
+    const pastMinutes = Math.floor(pastSeconds / 60);
+    if (pastSeconds > 0 || isTimerRunning) {
+      // 如果已經專注>0 或是時間正在倒數
+      const now = new Date();
+      const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+      // 這一輸開始專注的時間 = 現在總時間 - 已經專注了幾分鐘
+      const startTotalMinutes = currentTotalMinutes - pastMinutes;
+      // /10 之後就能算出起始的格子的 ID
+      startCellId = Math.floor(startTotalMinutes / 10);
+    }
+  }
 
   return (
     <div className="w-full h-full flex flex-col justify-between">
@@ -39,9 +61,14 @@ export default function FocusMatrix() {
         {gridCellsArray?.map((cell) => {
           const isCurrentTimeCell = cell.id === liveCurrentCellId;
 
-          // 判斷這格是不是 正在專注中
           const isActivelyFocusingNow =
-            (isTimerRunning || remainingSeconds > 0) && mode === 'work' && isCurrentTimeCell;
+            (isTimerRunning || remainingSeconds > 0) &&
+            mode === 'work' &&
+            startCellId !== null &&
+            liveCurrentCellId !== null &&
+            // 判斷條件：這格的 ID 大於等於起點，且小於等於現在的 ID
+            cell.id >= startCellId &&
+            cell.id <= liveCurrentCellId;
 
           // 如果資料庫中顯示 專注中 或 現在正在專注 = isFocused
           const isFocused = cell.status === 'focused' || isActivelyFocusingNow;
