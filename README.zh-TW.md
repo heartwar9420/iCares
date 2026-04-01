@@ -61,6 +61,7 @@ iCares 將科學理論轉化為實際的產品機制：
 
 ### 2. 會員數據中心 (Member Center)
 記錄每日專注時長。
+
 ![Member Center](./docs/iCares-MemberCenter.gif)
 
 ### 3. 新手導覽教學 (Guide Page)
