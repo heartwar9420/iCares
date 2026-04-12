@@ -13,8 +13,8 @@ interface AuthModalProps {
 export default function AuthModal({ onCloseAuthModal, initialMode = 'signin' }: AuthModalProps) {
   // 目前是登入還是註冊模式
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('aa@aa.com');
+  const [password, setPassword] = useState('aaaaaa');
   const [displayName, setDisplayName] = useState('');
 
   const router = useRouter();
