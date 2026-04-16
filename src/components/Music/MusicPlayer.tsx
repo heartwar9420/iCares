@@ -38,12 +38,14 @@ export default function MusicPlayer() {
 
   // 在 isAutoSync 為 true 時，才允許連動播放
   useEffect(() => {
+    if (!player || !isAutoSync) return;
     const timer = setTimeout(() => {
-      if (isTimerRunning && player && isAutoSync) {
+      if (isTimerRunning) {
         player.playVideo();
-        setIsPlaying(true);
+      } else {
+        player.pauseVideo();
       }
-    }, 0);
+    }, 50);
     return () => clearTimeout(timer);
   }, [isTimerRunning, player, isAutoSync]);
 
