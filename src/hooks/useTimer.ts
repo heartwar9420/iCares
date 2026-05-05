@@ -69,7 +69,6 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
   const targetEndTimeRef = useRef<number | null>(null); // 用來記住預計結束的真實時間戳 (毫秒)
 
   const [isReplayingNow, setIsReplayingNow] = useState(false);
-  const replayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { updateStatus } = useChatContext();
   const { user, profile } = useProfileContext();
@@ -195,28 +194,32 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     return roundedReplaySeconds;
   };
 
-  // 隨機提示
+  // 啟動replay模式
   useEffect(() => {
     if (!isReplay || mode !== 'work') {
+      setIsReplayingNow(false);
       return;
     }
-    if (remainingSeconds > 0) {
-      if (remainingSeconds === nextReplayTargetSeconds.current) {
-        if (replaySound) {
-          const newReplaySound = replaySound.cloneNode(true) as HTMLAudioElement;
-          newReplaySound.play();
-        }
-        // 開啟神經重放的提醒，並設定 10 秒後自動關閉
-        setIsReplayingNow(true);
-        if (replayTimeoutRef.current) clearTimeout(replayTimeoutRef.current);
-        replayTimeoutRef.current = setTimeout(() => {
-          setIsReplayingNow(false);
-        }, 10000); // 10000 毫秒 = 10 秒
+    if (remainingSeconds > 0 && remainingSeconds === nextReplayTargetSeconds.current) {
+      setIsReplayingNow(true);
+      playAudio(replaySound);
 
-        nextReplayTargetSeconds.current = remainingSeconds - getRandomReplaySeconds();
-      }
+      nextReplayTargetSeconds.current = remainingSeconds - getRandomReplaySeconds();
     }
   }, [remainingSeconds, isReplay, mode]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (isReplayingNow) {
+      timer = setTimeout(() => {
+        setIsReplayingNow(false);
+        playAudio(replaySound);
+      }, 10000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isReplayingNow]);
 
   const startNewTimer = useCallback(
     async (targetMode = mode, targetConfigs = timerDurationConfigs) => {
@@ -236,18 +239,10 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
         rounds_to_long_rest: String(roundsToRest),
       });
 
-      // const URLString = new URLSearchParams(apiParams).toString();
-      // const URL = `${process.env.NEXT_PUBLIC_API_URL}/api/timer?${URLString}`;
       const URL = `${process.env.NEXT_PUBLIC_API_URL}/api/timer?${apiParams.toString()}`;
-      // const URL = `${process.env.NEXT_PUBLIC_API_URL}/api/timer?mode=${targetMode}`;
-      // const URL = `http://127.0.0.1:8000/api/timer?mode=${targetMode}`;
-      // 因為要上線，後端的網址就不會是固定的
-      // 而 NEXT_PUBLIC 是固定寫法 , _API_URL 是自已取名的
 
       try {
-        // fetchAPI
         const response = await fetch(URL);
-        // 轉成json格式
         const result = await response.json();
 
         if (!response.ok || !result.data) {
