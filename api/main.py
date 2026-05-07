@@ -8,7 +8,6 @@ from supabase import create_client, Client
 from datetime import datetime, timezone
 from datetime import timedelta
 
-
 app = FastAPI()
 
 # 設定白名單：只有名單內的「地址」可以進來跟後端拿資料
@@ -131,6 +130,9 @@ async def sync_timer_action(payload: TimerAction):
             updated_data["is_running"] = False
             updated_data["target_end_time"] = None
             updated_data["remaining_seconds"] = 0
+            updated_data["completed_rounds"] = 0
+            if payload.user_id in user_completed_count:
+                user_completed_count[payload.user_id] = 0
 
         response = (
             supabase_db.table("timer_states")
