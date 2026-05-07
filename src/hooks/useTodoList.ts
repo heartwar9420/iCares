@@ -23,6 +23,7 @@ const todoMapper = {
     iconColor: dbTodo.icon_color,
     isCompleted: dbTodo.is_completed,
     completedAt: dbTodo.completed_at,
+    sortOrder: dbTodo.sort_order,
   }),
   toDatabase: (todo: Partial<Todo>) => ({
     user_id: todo.userId,
@@ -31,6 +32,7 @@ const todoMapper = {
     icon_color: todo.iconColor,
     is_completed: todo.isCompleted,
     completed_at: todo.completedAt,
+    sort_order: todo.sortOrder,
   }),
 };
 export function useTodoList() {
@@ -60,7 +62,7 @@ export function useTodoList() {
         .select('*')
         // gte 是 Greater Than or Equal (大於等於)
         .or(`is_completed.eq.false,completed_at.gte.${today}T00:00:00Z`)
-        .order('created_at', { ascending: false });
+        .order('sort_order', { ascending: true });
       if (error) {
         console.error('Supabase 新增失敗：', error.message, error.details);
       }
@@ -114,6 +116,9 @@ export function useTodoList() {
     incomingIconColor: string,
   ) => {
     if (!user) return;
+    const currentMinOrder =
+      activeItems.length > 0 ? Math.min(...activeItems.map((t) => t.sortOrder || 0)) : 0;
+    const newSortOrder = currentMinOrder - 1024;
 
     const newTodoDraft: Partial<Todo> = {
       userId: user.id,
@@ -121,6 +126,7 @@ export function useTodoList() {
       iconName: incomingIconName || 'TreePine',
       iconColor: incomingIconColor || 'text-emerald-500',
       isCompleted: false,
+      sortOrder: newSortOrder,
     };
     // 透過 Mapper 轉換成資料庫格式
     const dbData = todoMapper.toDatabase(newTodoDraft);
@@ -241,24 +247,35 @@ export function useTodoList() {
 
     // 只有當位置真的改變時才執行
     if (active.id !== over.id) {
-      setTodos((prev) => {
-        const oldIndex = prev.findIndex((t) => t.id === active.id);
-        const newIndex = prev.findIndex((t) => t.id === over.id);
-
-        // 如果 newIndex 是 -1，代表 over.id 是籃子
-        if (newIndex === -1) {
+      const oldIndex = todos.findIndex((t) => t.id === active.id);
+      const newIndex = todos.findIndex((t) => t.id === over.id);
+      if (newIndex === -1) {
+        setTodos((prev) => {
           const item = prev[oldIndex];
           const newStatus = over.id === 'completedBasket';
-
-          // 先把舊的刪掉，再把改好狀態的塞到最後面
           const filtered = prev.filter((t) => t.id !== active.id);
           return [...filtered, { ...item, isCompleted: newStatus }];
-        }
+        });
+        setActiveId(null);
+        return;
+      }
+      const newOrderArray = arrayMove(todos, oldIndex, newIndex);
+      const prevItem = newOrderArray[newIndex - 1];
+      const nextItem = newOrderArray[newIndex + 1];
 
-        // 如果是在有鄰居的地方換位置
-        const newOrder = arrayMove(prev, oldIndex, newIndex);
-        return newOrder;
-      });
+      let newSortOrder = 0;
+      if (!prevItem) {
+        newSortOrder = (nextItem?.sortOrder || 0) - 1024;
+      } else if (!nextItem) {
+        newSortOrder = (prevItem?.sortOrder || 0) + 1024;
+      } else {
+        newSortOrder = Math.floor((prevItem.sortOrder! + nextItem.sortOrder!) / 2);
+      }
+      const finalTodos = newOrderArray.map((todo, index) =>
+        index === newIndex ? { ...todo, sortOrder: newSortOrder } : todo,
+      );
+      setTodos(finalTodos);
+      handleUpdateTodo(active.id as string, { sortOrder: newSortOrder });
     }
 
     // 清除影子

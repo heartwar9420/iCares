@@ -36,6 +36,7 @@ export function useTodosHistory() {
           iconColor: dbTodo.icon_color,
           isCompleted: dbTodo.is_completed,
           completedAt: dbTodo.completed_at,
+          sortOrder: dbTodo.sort_order,
         }));
         setCompletedTodos(formatted);
       }
