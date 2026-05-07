@@ -67,8 +67,9 @@ async def get_timer(
     user_completed_count[user_id] = completed_work_count
 
     timer_response = {
-        "mode": final_mode,  # 告訴前端「最後決定」的模式
+        "mode": final_mode,
         "duration_seconds": seconds_value,
+        "completed_work_count": completed_work_count,
     }
     return {"data": timer_response}
 
