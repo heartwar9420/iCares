@@ -97,6 +97,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          keepalive: true,
         });
       } catch (error) {
         console.error('同步計時器狀態失敗:', error);
@@ -376,7 +377,6 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
         setIsTimerConfigOpen(false); // 關閉設定panel
         playAudio(startSound); // 播放開始音效
         updateStatus('專注中');
-        syncTimerAction('start', totalSeconds, 'work'); // 傳送當前模式, 開始 及預計時間給後端
       } else {
         // 如果時間剩餘時間 != 0 (已經不是開始第一次了) 繼續倒數
         targetEndTimeRef.current = Date.now() + remainingSeconds * 1000; // 如果是繼續倒數 重新計算結束時間
