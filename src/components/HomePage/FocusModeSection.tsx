@@ -34,6 +34,15 @@ export default function FocusModeSection() {
   });
   const [demoReplay, setDemoReplay] = useState(true);
   // 模擬模式切換的假邏輯
+  const [isDemo, setIsDemo] = useState(false);
+
+  const handleToggleDemo = (newValue: boolean) => {
+    setIsDemo(newValue);
+    if (newValue) {
+      setDemoReplay(true);
+    }
+  };
+
   const handleDemoApplyCombo = (combo: TimerComboType) => {
     setDemoCombo(combo);
     if (combo === 'iCares') {
@@ -129,6 +138,8 @@ export default function FocusModeSection() {
 
           <div className="relative z-10 w-full flex justify-center transform scale-100 md:scale-110 lg:scale-130 xl:scale-150">
             <TimerConfigPanelUI
+              isDemo={isDemo}
+              onToggleDemo={handleToggleDemo}
               timerCombo={demoCombo}
               timerDurationConfigs={demoConfigs}
               isReplay={demoReplay}
