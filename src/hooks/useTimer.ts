@@ -205,6 +205,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       return;
     }
     if (remainingSeconds > 0 && remainingSeconds === nextReplayTargetSeconds.current) {
+      if (!isDemo && remainingSeconds <= 180) return;
       setIsReplayingNow(true);
       playAudio(replaySound);
 
