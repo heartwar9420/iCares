@@ -52,6 +52,13 @@ const playAudio = (audioNode: HTMLAudioElement | null, targetVolume: number = 1.
 };
 export type TimerComboType = 'iCares' | 'Immersion' | 'TomatoClock' | 'CustomCombo'; // 定義 Combo 的型別
 
+export const calculateReplaySeconds = (randomValue: number): number => {
+  const safeRandom = Math.max(0, Math.min(1, randomValue));
+  const minSeconds = 180;
+  const range = 120;
+  return Math.floor(minSeconds + safeRandom * range);
+};
+
 export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
   const [remainingSeconds, setRemainingSeconds] = useState(0); // 剩餘時間有多少？ 預設 0
   const [isTimerRunning, setIsTimerRunning] = useState(false); // 計時器是否在倒數中 預設是否
@@ -189,15 +196,6 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     }
   }, []);
 
-  // 取得隨機 180~300秒
-  const getRandomReplaySeconds = () => {
-    const rawReplaySeconds = Math.random() * 120 + 180;
-    // const rawReplaySeconds = 15;
-    const roundedReplaySeconds = Math.floor(rawReplaySeconds);
-    // console.log(roundedReplaySeconds);
-    return roundedReplaySeconds;
-  };
-
   // 啟動replay模式
   useEffect(() => {
     if (!isReplay || mode !== 'work') {
@@ -209,7 +207,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       setIsReplayingNow(true);
       playAudio(replaySound);
 
-      const nextInterval = isDemo ? 15 : getRandomReplaySeconds();
+      const nextInterval = isDemo ? 15 : calculateReplaySeconds(Math.random());
       nextReplayTargetSeconds.current = remainingSeconds - nextInterval;
     }
   }, [remainingSeconds, isReplay, mode, isDemo]);
@@ -271,7 +269,8 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
           playAudio(replaySound);
           nextReplayTargetSeconds.current = data.duration_seconds - 15;
         } else {
-          nextReplayTargetSeconds.current = data.duration_seconds - getRandomReplaySeconds();
+          nextReplayTargetSeconds.current =
+            data.duration_seconds - calculateReplaySeconds(Math.random());
         }
 
         // 如果從後端傳來 下一個要開始的mode 是 'work' 的話 就把時間記下來
