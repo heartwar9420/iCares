@@ -407,7 +407,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     }
   };
 
-  // resetTimer 長按重置 計時器
+  // resetTimer 重置計時器
   const resetTimer = async () => {
     setIsTimerRunning(false);
     setRemainingSeconds(0);
