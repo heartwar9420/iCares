@@ -247,7 +247,7 @@ export const TimerConfigPanelUI = ({
             className="text-slate-400 hover:text-slate-200 cursor-help transition-colors peer"
           />
           <div className="absolute left-0 bottom-full mb-2 w-max max-w-xs px-2.5 py-1.5 bg-black/90 text-slate-200 text-xs rounded-lg opacity-0 peer-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 border border-white/10 shadow-xl">
-            預設馬上開始神經重放 並在結束後5秒循環
+            預設馬上開始神經重放，並在結束後5秒循環
           </div>
         </div>
 
