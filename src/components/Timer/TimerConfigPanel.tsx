@@ -150,21 +150,39 @@ export const TimerConfigPanelUI = ({
     <div className="bg-[#0a0e17]/95 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl z-50 rounded-3xl p-6 w-full max-w-105 flex flex-col gap-6">
       {/* 模式選擇按鈕 */}
       <div className="flex gap-2 bg-black/20 p-1 md:p-2 rounded-2xl border border-white/5">
-        <button className={getModeBtnClass('iCares')} onClick={() => onApplyCombo('iCares')}>
+        <button
+          className={getModeBtnClass('iCares')}
+          onClick={() => {
+            onToggleDemo(false);
+            onApplyCombo('iCares');
+          }}
+        >
           iCares
         </button>
-        <button className={getModeBtnClass('Immersion')} onClick={() => onApplyCombo('Immersion')}>
+        <button
+          className={getModeBtnClass('Immersion')}
+          onClick={() => {
+            onToggleDemo(false);
+            onApplyCombo('Immersion');
+          }}
+        >
           沉浸專注
         </button>
         <button
           className={getModeBtnClass('TomatoClock')}
-          onClick={() => onApplyCombo('TomatoClock')}
+          onClick={() => {
+            onToggleDemo(false);
+            onApplyCombo('TomatoClock');
+          }}
         >
           番茄鐘
         </button>
         <button
           className={getModeBtnClass('CustomCombo')}
-          onClick={() => onApplyCombo('CustomCombo')}
+          onClick={() => {
+            onToggleDemo(false);
+            onApplyCombo('CustomCombo');
+          }}
         >
           自訂模式
         </button>
