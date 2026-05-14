@@ -1,7 +1,7 @@
 import { useTimerContext } from '@/src/contexts/TimerContext';
 import type { TimerComboType } from '@/src/hooks/useTimer';
 import ActionIconButton from '../UI/ActionIconButton';
-import { CircleMinus, CirclePlus, Square, SquareCheck } from 'lucide-react';
+import { CircleMinus, CirclePlus, Square, SquareCheck, CircleQuestionMark } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 export type TimerKey =
@@ -118,18 +118,22 @@ export interface TimerConfigPanelUIProps {
     roundsToLongRest: number;
   };
   isReplay: boolean;
+  isDemo: boolean;
   onApplyCombo: (combo: TimerComboType) => void;
   onUpdateDuration: (key: TimerKey, value: number) => void;
   onToggleReplay: (isReplay: boolean) => void;
+  onToggleDemo: (isDemo: boolean) => void;
 }
 
 export const TimerConfigPanelUI = ({
   timerCombo,
   timerDurationConfigs,
   isReplay,
+  isDemo,
   onApplyCombo,
   onUpdateDuration,
   onToggleReplay,
+  onToggleDemo,
 }: TimerConfigPanelUIProps) => {
   const isInputsLocked = timerCombo !== 'CustomCombo';
 
@@ -205,18 +209,65 @@ export const TimerConfigPanelUI = ({
         <div className="text-sm font-medium text-slate-400 w-32">神經重放模式</div>
         <div className="flex flex-1 items-center gap-6">
           <ActionIconButton
-            disabled={isInputsLocked}
+            disabled={isInputsLocked || isDemo}
             onClick={() => onToggleReplay(true)}
-            className={`flex items-center gap-2 text-sm transition-colors ${isReplay ? 'text-[#ffb347]' : 'text-slate-500 hover:text-slate-300'} ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
+            className={`flex items-center gap-2 text-sm transition-colors ${
+              isDemo
+                ? 'text-slate-500 opacity-50'
+                : isReplay
+                  ? 'text-[#ffb347]'
+                  : 'text-slate-500 hover:text-slate-300'
+            } ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
           >
             {isReplay ? <SquareCheck size={18} /> : <Square size={18} />} <span>開啟</span>
           </ActionIconButton>
           <ActionIconButton
-            disabled={isInputsLocked}
+            disabled={isInputsLocked || isDemo}
             onClick={() => onToggleReplay(false)}
-            className={`flex items-center gap-2 text-sm transition-colors ${!isReplay ? 'text-slate-200' : 'text-slate-500 hover:text-slate-300'} ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
+            className={`flex items-center gap-2 text-sm transition-colors ${
+              isDemo
+                ? 'text-slate-500 opacity-50'
+                : !isReplay
+                  ? 'text-slate-200'
+                  : 'text-slate-500 hover:text-slate-300'
+            } ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
           >
             {!isReplay ? <SquareCheck size={18} /> : <Square size={18} />} <span>關閉</span>
+          </ActionIconButton>
+        </div>
+      </div>
+
+      <div
+        className={`flex items-center justify-between pt-0 transition-opacity ${isInputsLocked ? 'opacity-40' : 'opacity-100'}`}
+      >
+        <div className="flex items-center gap-1.5 w-32 relative">
+          <div className="text-sm font-medium text-[#ffb347]">Demo 模式</div>
+          <CircleQuestionMark
+            size={14}
+            className="text-slate-400 hover:text-slate-200 cursor-help transition-colors peer"
+          />
+          <div className="absolute left-0 bottom-full mb-2 w-max max-w-xs px-2.5 py-1.5 bg-black/90 text-slate-200 text-xs rounded-lg opacity-0 peer-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 border border-white/10 shadow-xl">
+            預設馬上開始神經重放 並在結束後5秒循環
+          </div>
+        </div>
+
+        <div className="flex flex-1 items-center gap-6">
+          <ActionIconButton
+            disabled={isInputsLocked}
+            onClick={() => {
+              onToggleDemo(true);
+              onToggleReplay(true);
+            }}
+            className={`flex items-center gap-2 text-sm transition-colors ${isDemo ? 'text-[#ffb347]' : 'text-slate-500 hover:text-slate-300'} ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
+          >
+            {isDemo ? <SquareCheck size={18} /> : <Square size={18} />} <span>開啟</span>
+          </ActionIconButton>
+          <ActionIconButton
+            disabled={isInputsLocked}
+            onClick={() => onToggleDemo(false)}
+            className={`flex items-center gap-2 text-sm transition-colors ${!isDemo ? 'text-slate-200' : 'text-slate-500 hover:text-slate-300'} ${!isInputsLocked ? 'cursor-pointer ' : 'cursor-not-allowed'}`}
+          >
+            {!isDemo ? <SquareCheck size={18} /> : <Square size={18} />} <span>關閉</span>
           </ActionIconButton>
         </div>
       </div>
@@ -234,6 +285,8 @@ export default function TimerConfigPanel() {
     setIsReplay,
     isReplay,
     applyComboSettings,
+    isDemo,
+    setIsDemo,
   } = useTimerContext();
 
   const panelRef = useRef<HTMLDivElement>(null);
@@ -273,9 +326,11 @@ export default function TimerConfigPanel() {
         timerCombo={timerCombo}
         timerDurationConfigs={timerDurationConfigs}
         isReplay={isReplay}
+        isDemo={isDemo}
         onApplyCombo={applyComboSettings}
         onUpdateDuration={handleUpdateDuration}
         onToggleReplay={setIsReplay}
+        onToggleDemo={setIsDemo}
       />
     </div>
   );

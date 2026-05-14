@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useChatContext } from '../contexts/ChatContext';
 import { useProfileContext } from '../contexts/ProfileContext';
+import { get } from 'http';
 
 interface TimerConfig {
   workTimeMinutes: number;
@@ -62,6 +63,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
   >('iCares');
   const nextReplayTargetSeconds = useRef<null | number>(null); // Replay 的計時邏輯 用useRef 來記住數字
   const [isReplay, setIsReplay] = useState(true); // isReplay 設定是否要神經重放
+  const [isDemo, setIsDemo] = useState(false);
   const isProcessingEnd = useRef(false); // 處理結束了嗎？
   const sessionStartTimeRef = useRef<Date | null>(null); // 用來記住專注起始時間
   const [completedRounds, setCompletedRounds] = useState(0); //用來記住完成幾次專注
@@ -171,7 +173,8 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     setIsTimerRunning(false);
     setRemainingSeconds(0);
     setMode('work');
-    setCompletedRounds(0); // 切換模式時把專注次數歸零
+    setCompletedRounds(0);
+    setIsReplayingNow(false);
 
     if (key === 'CustomCombo') {
       const savedConfig = localStorage.getItem('icares_custom_config');
@@ -205,9 +208,10 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       setIsReplayingNow(true);
       playAudio(replaySound);
 
-      nextReplayTargetSeconds.current = remainingSeconds - getRandomReplaySeconds();
+      const nextInterval = isDemo ? 15 : getRandomReplaySeconds();
+      nextReplayTargetSeconds.current = remainingSeconds - nextInterval;
     }
-  }, [remainingSeconds, isReplay, mode]);
+  }, [remainingSeconds, isReplay, mode, isDemo]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
@@ -260,23 +264,28 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
         targetEndTimeRef.current = Date.now() + data.duration_seconds * 1000; // 算出預計結束的時間
 
         setIsTimerRunning(true);
-        // useRef的值會存在 .current 中
-        nextReplayTargetSeconds.current = data.duration_seconds - getRandomReplaySeconds();
+
+        if (isDemo) {
+          setIsReplayingNow(true);
+          playAudio(replaySound);
+          nextReplayTargetSeconds.current = data.duration_seconds - 15;
+        } else {
+          nextReplayTargetSeconds.current = data.duration_seconds - getRandomReplaySeconds();
+        }
 
         // 如果從後端傳來 下一個要開始的mode 是 'work' 的話 就把時間記下來
         if (data.mode === 'work') {
           sessionStartTimeRef.current = new Date();
         }
 
-        syncTimerAction('start', data.duration_seconds, data.mode); //告訴伺服器 開始 , 剩餘時間 , 模式
+        syncTimerAction('start', data.duration_seconds, data.mode);
         return data.mode;
       } catch (error) {
         console.log('Failed to fetch timer:', error);
         setIsTimerRunning(false);
       }
     },
-    // 當 底下的參數發生 改變時才需要重新產生此函式
-    [mode, timerDurationConfigs, syncTimerAction, user?.id],
+    [mode, timerDurationConfigs, syncTimerAction, user?.id, isDemo],
   );
   useEffect(() => {
     if (isTimerRunning && remainingSeconds === 0) {
@@ -388,12 +397,13 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
       }
     } else {
       // 如果正在倒數中
-      setIsTimerRunning(false); // 暫停倒數
-      targetEndTimeRef.current = null; // 清除預計結束時間
+      setIsTimerRunning(false);
+      targetEndTimeRef.current = null;
       syncTimerAction('pause', remainingSeconds, mode);
-      setIsTimerConfigOpen(false); // 關閉設定panel
-      playAudio(finishSound); // 播放暫停音效
+      setIsTimerConfigOpen(false);
+      playAudio(finishSound);
       updateStatus('閒置中');
+      setIsReplayingNow(false);
     }
   };
 
@@ -405,6 +415,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     setCompletedRounds(0);
     updateStatus('閒置中');
     syncTimerAction('reset', 0, 'work');
+    setIsReplayingNow(false);
   };
 
   return {
@@ -429,5 +440,7 @@ export default function useTimer({ onWorkEnd }: UseTimerProps = {}) {
     applyComboSettings,
     completedRounds,
     isReplayingNow,
+    isDemo,
+    setIsDemo,
   };
 }
