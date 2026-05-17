@@ -1,20 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { iconOptions } from '../Todo/iconConstants';
 import { useFocusContext } from '@/src/contexts/FocusContext';
-import { useTimerContext } from '@/src/contexts/TimerContext';
+import { useTimerStore } from '@/src/stores/useTimerStore';
 
-export default function FocusMatrix() {
+const FocusMatrix = React.memo(function FocusMatrix() {
   const { gridCellsArray, activeColor, activeTaskName, activeIcon } = useFocusContext();
-  const { isTimerRunning, mode, remainingSeconds, timerDurationConfigs } = useTimerContext();
-
-  // 用來在儲存目前是時間哪一個格子
+  const mode = useTimerStore((s) => s.mode);
+  const timerDurationConfigs = useTimerStore((s) => s.timerDurationConfigs);
+  const isTimerRunning = useTimerStore((s) => s.isTimerRunning);
+  const hasRemainingTime = useTimerStore((s) => s.remainingSeconds > 0);
   const [liveCurrentCellId, setLiveCurrentCellId] = useState<number | null>(null);
 
-  // 同步使用者的本地時間
   useEffect(() => {
-    // 進入時先執行一次
     const updateTime = () => {
       const now = new Date();
       const totalMinutes = now.getHours() * 60 + now.getMinutes();
@@ -23,27 +22,26 @@ export default function FocusMatrix() {
 
     updateTime();
 
-    // 用 setInterval 每分鐘檢查一次，確保時間準確跨越格子
     const intervalTimer = setInterval(updateTime, 60000);
     return () => clearInterval(intervalTimer);
   }, []);
 
-  // 用來儲存哪一個是專注開始時的格子
   let startCellId: number | null = null;
-  // 如果現在是work 且現在的時間格子 != null 且 得到時用者的時間設定
+
   if (mode === 'work' && liveCurrentCellId !== null && timerDurationConfigs) {
-    // 算出總共要專注多久分鐘
+    const currentRemainingSeconds = useTimerStore.getState().remainingSeconds;
+
     const totalFocusSeconds = timerDurationConfigs.workTimeMinutes * 60;
-    // 算出現在已經專注多久了
-    const pastSeconds = totalFocusSeconds - remainingSeconds;
+
+    const pastSeconds = totalFocusSeconds - currentRemainingSeconds;
     const pastMinutes = Math.floor(pastSeconds / 60);
+
     if (pastSeconds > 0 || isTimerRunning) {
-      // 如果已經專注>0 或是時間正在倒數
       const now = new Date();
       const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
-      // 這一輸開始專注的時間 = 現在總時間 - 已經專注了幾分鐘
+
       const startTotalMinutes = currentTotalMinutes - pastMinutes;
-      // /10 之後就能算出起始的格子的 ID
+
       startCellId = Math.floor(startTotalMinutes / 10);
     }
   }
@@ -64,7 +62,7 @@ export default function FocusMatrix() {
 
           // 這個格子是否 = 正在進行中的專注間間區間 中？
           const isActivelyFocusingNow =
-            (isTimerRunning || remainingSeconds > 0) && // 暫停時 or 開始時
+            (isTimerRunning || hasRemainingTime) && // 暫停時 or 開始時
             mode === 'work' && // 且模式是 work
             startCellId !== null && // 且 起始格子 != null
             liveCurrentCellId !== null && // 且 現在的格子 != null
@@ -130,4 +128,5 @@ export default function FocusMatrix() {
       </div>
     </div>
   );
-}
+});
+export default FocusMatrix;

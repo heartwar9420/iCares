@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Link, Unlink } from 'lucide-react';
 import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube';
-import { useTimerContext } from '@/src/contexts/TimerContext';
+import { useTimerStore } from '@/src/stores/useTimerStore';
 import ActionIconButton from '../UI/ActionIconButton';
 
 export default function MusicPlayer() {
@@ -11,7 +11,7 @@ export default function MusicPlayer() {
   const [volume, setVolume] = useState(50);
   const [isMuted, setIsMuted] = useState(false);
   const [isAutoSync, setIsAutoSync] = useState(true);
-  const { isTimerRunning } = useTimerContext();
+  const isTimerRunning = useTimerStore((s) => s.isTimerRunning);
 
   useEffect(() => {
     const timer = setTimeout(() => {

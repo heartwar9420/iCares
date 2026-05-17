@@ -1,177 +1,139 @@
 'use client';
 
-import { useTimerContext } from '@/src/contexts/TimerContext';
+import { useCallback, useMemo, useRef, useEffect } from 'react';
 import TimerSettingButton from '../Timer/TimerSettingButton';
 import TimerConfigPanel from '../Timer/TimerConfigPanel';
 import FocusMatrix from '../Stats/FocusMatrix';
-import TimerProgress from '../Timer/TimerProgress';
 import ActionIconButton from '../UI/ActionIconButton';
 import { TimerReset } from 'lucide-react';
+import { useTimerStore } from '@/src/stores/useTimerStore';
+import { useProfileContext } from '@/src/contexts/ProfileContext';
+import { useChatContext } from '@/src/contexts/ChatContext';
+import { TimerProgress } from '../Timer/TimerProgress';
 
-export default function FocusCore() {
-  const {
-    remainingSeconds,
-    mode,
-    timerDurationConfigs,
-    isTimerRunning,
-    toggleTimer,
-    resetTimer,
-    completedRounds,
-    isReplayingNow,
-  } = useTimerContext();
+function StatusMessage() {
+  const remainingSeconds = useTimerStore((s) => s.remainingSeconds);
+  const isTimerRunning = useTimerStore((s) => s.isTimerRunning);
+  const mode = useTimerStore((s) => s.mode);
+  const isReplayingNow = useTimerStore((s) => s.isReplayingNow);
 
-  const safeRemaining = Number(remainingSeconds) || 0; // 為了不要顯示 NaN 強制把他轉成Number
-
-  const minutes = Math.floor(safeRemaining / 60);
-  const seconds = safeRemaining % 60;
-
-  const modeText = {
-    work: '專注中',
-    rest: '短休息',
-    long_rest: '長休息',
-  };
-  // 根據目前的 mode 顯示中文名稱，如果資料還沒讀取到就顯示預設文字
+  const modeText = { work: '專注中', rest: '短休息', long_rest: '長休息' };
   const currentModeText = modeText[mode as keyof typeof modeText] || '狀態讀取中';
-
-  // 用一個物件把所有模式的時間對應好
-  const timeConfigs = {
-    work: `${timerDurationConfigs?.workTimeMinutes ?? 20}:00`,
-    long_rest: `${timerDurationConfigs?.longRestTimeMinutes ?? 20}:00`,
-    rest: `00:${timerDurationConfigs?.shortRestTimeSeconds ?? 20}`,
-  };
-
-  // 根據當前 mode 抓取對應時間，如果都沒有就給個預設值
-  const defaultTimeString = timeConfigs[mode as keyof typeof timeConfigs] || '--:--';
-
-  // 0 秒且沒有在倒數中 才是準備開始
-  const isInitialState = remainingSeconds === 0 && !isTimerRunning;
-
-  // 取得分鐘與秒數
-  let displayMinutes = '00';
-  let displaySeconds = '00';
-
-  // 如果不是初始狀態的時候
-  if (!isInitialState) {
-    displayMinutes = minutes < 10 ? `0${minutes}` : String(minutes);
-    displaySeconds = seconds < 10 ? `0${seconds}` : String(seconds);
-  } else {
-    const [min, sec] = defaultTimeString.split(':');
-    displayMinutes = String(min).padStart(2, '0');
-    displaySeconds = String(sec).padStart(2, '0');
-  }
-
-  // 只有在剩餘時間 = 0 且 時間沒有倒數中 才會顯示 '準備開始'
   const statusMessage = remainingSeconds === 0 && !isTimerRunning ? '準備開始' : currentModeText;
 
-  // 計算圓的百分比
-  let totalSeconds = 0;
-  totalSeconds = Number(totalSeconds) || 0;
-  if (mode === 'work') {
-    totalSeconds = timerDurationConfigs.workTimeMinutes * 60;
-  } else if (mode === 'rest') {
-    totalSeconds = timerDurationConfigs.shortRestTimeSeconds;
-  } else if (mode === 'long_rest') {
-    totalSeconds = timerDurationConfigs.longRestTimeMinutes * 60;
-  }
-
-  let progressPercentage = 0;
-  if (isInitialState) {
-    // 只有在「準備開始」且剩餘時間為 0 時，才是真正的 0%
-    progressPercentage = 0;
-  } else if (totalSeconds > 0) {
-    // 只要不是初始狀態，就計算過去的時間
-    // 當 remainingSeconds 為 0 時，(totalSeconds - 0) / totalSeconds 就會剛好是 100%
-    const pastSeconds = totalSeconds - remainingSeconds;
-    progressPercentage = (pastSeconds / totalSeconds) * 100;
-  }
-
-  // 產生圓點陣列的邏輯
-  const totalRounds = timerDurationConfigs.roundsToLongRest;
-  const dots = Array.from({ length: totalRounds }).map((_, index) => {
-    const isCompleted = index < completedRounds;
-    const isCurrent = index === completedRounds && mode === 'work';
+  if (isReplayingNow && mode === 'work' && isTimerRunning) {
     return (
-      <span
-        key={index}
-        className={`w-3 h-3 rounded-full transition-all duration-300 ${isCompleted ? 'bg-[#ffb347]' : isCurrent ? 'bg-[#ffb347] animate-pulse ' : 'bg-white/30'}`}
-      ></span>
+      <p className="text-blue-400 font-bold text-lg tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">
+        神經重放中，請閉眼10秒
+      </p>
     );
-  });
+  }
+
+  return (
+    <p className="text-slate-500 font-bold text-lg tracking-[0.4em]">當前階段：{statusMessage}</p>
+  );
+}
+
+export default function FocusCore() {
+  const { user } = useProfileContext();
+  const { updateStatus } = useChatContext();
+
+  const updateStatusRef = useRef(updateStatus);
+  useEffect(() => {
+    updateStatusRef.current = updateStatus;
+  }, [updateStatus]);
+
+  const isTimerRunning = useTimerStore((s) => s.isTimerRunning);
+  const mode = useTimerStore((s) => s.mode);
+  const toggleTimer = useTimerStore((s) => s.toggleTimer);
+  const resetTimer = useTimerStore((s) => s.resetTimer);
+  const timerDurationConfigs = useTimerStore((s) => s.timerDurationConfigs);
+  const completedRounds = useTimerStore((s) => s.completedRounds);
+
+  const hasStarted = isTimerRunning || useTimerStore.getState().remainingSeconds > 0;
+
+  const handleResetClick = useCallback(() => {
+    const stableUpdateStatus = (s: string) =>
+      updateStatusRef.current?.(s as '專注中' | '閒置中' | '離線中');
+    resetTimer(user?.id, stableUpdateStatus);
+  }, [resetTimer, user?.id]);
+
+  const handleToggleClick = useCallback(() => {
+    const stableUpdateStatus = (s: string) =>
+      updateStatusRef.current?.(s as '專注中' | '閒置中' | '離線中');
+    toggleTimer(user?.id, stableUpdateStatus, undefined);
+  }, [toggleTimer, user?.id]);
+
+  const renderedDots = useMemo(() => {
+    const totalRounds = timerDurationConfigs.roundsToLongRest;
+    return Array.from({ length: totalRounds }).map((_, index) => {
+      const isCompleted = index < completedRounds;
+      const isCurrent = index === completedRounds && mode === 'work';
+      return (
+        <span
+          key={index}
+          className={`w-3 h-3 rounded-full transition-all duration-300 ${isCompleted ? 'bg-[#ffb347]' : isCurrent ? 'bg-[#ffb347] animate-pulse ' : 'bg-white/30'}`}
+        ></span>
+      );
+    });
+  }, [timerDurationConfigs.roundsToLongRest, completedRounds, mode]);
+
+  const renderedResetButton = useMemo(
+    () => (
+      <ActionIconButton onClick={handleResetClick}>
+        <TimerReset
+          className={`w-10 h-10 text-slate-500 hover:text-white transition-colors duration-200 opacity-0 ${hasStarted ? 'opacity-100' : ''}`}
+        />
+      </ActionIconButton>
+    ),
+    [handleResetClick, hasStarted],
+  );
+
+  const renderedMainButton = useMemo(
+    () => (
+      <ActionIconButton onClick={handleToggleClick} className="flex group relative shrink-0">
+        <div
+          className={`absolute -inset-1 rounded-full blur opacity-60 group-hover:opacity-90 transition duration-500 group-hover:duration-200 ${isTimerRunning ? 'bg-linear-to-r from-red-500 to-rose-600' : 'bg-linear-to-r from-[#ffb347] to-orange-600'}`}
+        ></div>
+        <div
+          className={`relative px-8 md:px-16 py-2 md:py-5 rounded-full font-bold text-xl tracking-[0.25rem] hover:scale-105 active:scale-95 transition-all duration-300 ${isTimerRunning ? 'bg-red-500 text-white' : 'bg-[#ffb347] text-[#0a0e17]'}`}
+        >
+          {isTimerRunning ? '暫停專注' : !hasStarted ? '開始專注' : '繼續專注'}
+        </div>
+      </ActionIconButton>
+    ),
+    [handleToggleClick, isTimerRunning, hasStarted],
+  );
 
   return (
     <div className="flex flex-col items-center justify-between relative min-h-0 w-full h-full overflow-y-auto custom-scrollbar">
       {/* 計時區塊 */}
       <div className="flex flex-col flex-1 items-center justify-center w-full ">
-        {/* 計時器數字 */}
         <div className="text-center">
-          <TimerProgress progress={progressPercentage} size={300} strokeWidth={30}>
-            <div className="text-[70px] sm:text-[90px] md:text-[110px] tracking-tight text-white font-mono">
-              <>
-                {displayMinutes}
-                {/* animate-pulse = 呼吸燈 */}
-                <span
-                  className={`${isTimerRunning ? 'animate-pulse' : ''} mx-1 md:mx-2 text-[#ffb347]`}
-                >
-                  :
-                </span>
-                {displaySeconds}
-              </>
-            </div>
-          </TimerProgress>
+          <TimerProgress size={300} strokeWidth={30} />
         </div>
-        {/* 計時器狀態 */}
-        <div className="h-4 flex flex-col items-center justify-center mt-2 transition-all">
-          {isReplayingNow && mode === 'work' && isTimerRunning ? (
-            <p className="text-blue-400 font-bold text-lg tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">
-              神經重放中，請閉眼10秒
-            </p>
-          ) : (
-            <p className="text-slate-500 font-bold text-lg tracking-[0.4em]">
-              當前階段：{statusMessage}
-            </p>
-          )}
-        </div>
-        {/* 進度點點 */}
-        <div className="flex items-center justify-center gap-2 my-2">{dots}</div>
 
-        {/* 三個btn */}
+        <div className="h-4 flex flex-col items-center justify-center mt-2 transition-all">
+          <StatusMessage />
+        </div>
+
+        {/* 進度點點 */}
+        <div className="flex items-center justify-center gap-2 my-2">{renderedDots}</div>
+
+        {/* 三個按鈕區塊 */}
         <div className="my-4 flex items-center justify-center text-center gap-6">
           {/* 重置按鈕 */}
-          <ActionIconButton onClick={resetTimer}>
-            <TimerReset
-              className={`w-10 h-10 text-slate-500 hover:text-white transition-colors duration-200 opacity-0 ${isTimerRunning || remainingSeconds > 0 ? 'opacity-100' : ''}`}
-            />
-          </ActionIconButton>
+          {renderedResetButton}
 
           {/* 主按鈕 */}
-          <ActionIconButton onClick={toggleTimer} className="flex group relative shrink-0">
-            {/* 外邊框 */}
-            <div
-              className={`absolute -inset-1 rounded-full blur opacity-60 group-hover:opacity-90 transition duration-500 group-hover:duration-200
-                // bg-linear-to-r = 從左到右線性漸層
-                ${isTimerRunning ? 'bg-linear-to-r from-red-500 to-rose-600' : 'bg-linear-to-r from-[#ffb347] to-orange-600'}`}
-            ></div>
-
-            <div
-              className={`relative px-8 md:px-16 py-2 md:py-5 rounded-full font-bold text-xl tracking-[0.25rem] hover:scale-105 active:scale-95 transition-all duration-300
-              ${isTimerRunning ? 'bg-red-500 text-white]' : 'bg-[#ffb347] text-[#0a0e17]]'}`}
-            >
-              {isTimerRunning ? '暫停專注' : isInitialState ? '開始專注' : '繼續專注'}
-            </div>
-          </ActionIconButton>
+          {renderedMainButton}
 
           {/* 設定按鈕 & Panel */}
           <div className="relative group flex items-center justify-center shrink-0">
             <TimerSettingButton />
-
-            {/* 提示文字 (Tooltip) */}
-            {remainingSeconds !== 0 && (
+            {hasStarted && (
               <div
-                className={`absolute bottom-full mb-3 px-3 py-2 bg-slate-800 text-white text-base rounded-lg 
-                    whitespace-nowrap shadow-xl border border-white/10
-                    opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none
-                    right-0
-                    `}
+                className={`absolute bottom-full mb-3 px-3 py-2 bg-slate-800 text-white text-base rounded-lg whitespace-nowrap shadow-xl border border-white/10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none right-0`}
               >
                 只有重置計時器後才能開啟設定頁面！
               </div>

@@ -1,13 +1,14 @@
-import { FocusProvider } from '@/src/contexts/FocusContext';
-import { TimerProvider } from '@/src/contexts/TimerContext';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+
+import { FocusProvider } from '@/src/contexts/FocusContext';
 import { MemberCenterProvider } from '@/src/contexts/MemberCenterContext';
 import { TodoProvider } from '../contexts/TodoContext';
 import { TodosHistoryProvider } from '../contexts/TodosHistoryContext';
 import { ChatProvider } from '../contexts/ChatContext';
 import { ProfileProvider } from '../contexts/ProfileContext';
+import TimerOrchestrator from '@/src/components/TimerOrchestrator';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
   description:
     'iCares 是一款結合護眼機制與科學化休息的生產力工具。透過神經重放與 20-20-20 法則，幫助長時間工作者在維持高效率專注的同時，保護眼睛健康。',
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +40,8 @@ export default function RootLayout({
               <TodosHistoryProvider>
                 <FocusProvider>
                   <TodoProvider>
-                    <TimerProvider>{children}</TimerProvider>
+                    <TimerOrchestrator />
+                    {children}
                   </TodoProvider>
                 </FocusProvider>
               </TodosHistoryProvider>
