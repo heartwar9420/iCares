@@ -1,53 +1,48 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Circle, MessageSquareText, ChevronDown, Users, EyeOff, PowerOff } from 'lucide-react';
 import ActionIconButton from '../UI/ActionIconButton';
 import OnlineUserList from '../Chat/OnlineUserList';
 import MessageArea from '../Chat/MessageArea';
 import { useChatContext } from '@/src/contexts/ChatContext';
 import { useProfileContext } from '@/src/contexts/ProfileContext';
-import { useTimerContext } from '@/src/contexts/TimerContext';
+import { useTimerStore } from '@/src/stores/useTimerStore';
 
 function useChatNotification(isChatOpen: boolean) {
   const { messages, lastReadMessageId } = useChatContext();
   const { user } = useProfileContext();
 
-  // 如果聊天室開著或是沒訊息 未讀就一定是 false
   if (isChatOpen || !messages || messages.length === 0 || !lastReadMessageId) {
     return { unread: false };
   }
 
   const latestMsg = messages[messages.length - 1];
 
-  // 最新訊息的 ID 不等於最後讀取到的訊息 ID 且這則訊息不是我發的
   const hasUnread = latestMsg.id !== lastReadMessageId && latestMsg.user_id !== user?.id;
 
   return { unread: hasUnread };
 }
 
-export default function SocialPanel() {
+const SocialPanel = React.memo(function SocialPanel() {
   const [isChatRoomOpen, setIsChatRoomOpen] = useState(false);
   const { unread } = useChatNotification(isChatRoomOpen);
-
+  const isTimerRunning = useTimerStore((s) => s.isTimerRunning);
   const { onlineUsers, updateStatus, disconnectChat, reconnectChat } = useChatContext();
   const { profile } = useProfileContext();
-  const { isTimerRunning } = useTimerContext();
 
   const [currentStatus, setCurrentStatus] = useState<'Public' | 'Hidden' | 'Offline'>('Public');
-  // 控制彈窗開關
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // 用來偵測點擊外部的 ref
+
   const menuRef = useRef<HTMLDivElement>(null);
-  // 在畫面渲染完成後，再去讀取本地存檔或資料庫
+
   useEffect(() => {
     setTimeout(() => {
       const savedStatus = localStorage.getItem('focus_chat_status');
       let targetStatus = 'Public';
 
       if (savedStatus) {
-        // 如果有存檔，就使用存檔的狀態
         targetStatus = savedStatus;
       } else if (profile) {
-        // 如果沒有存檔，才使用 profile 的設定
         targetStatus = profile.privacy_mode === 'Public' ? 'Public' : 'Hidden';
       }
       setCurrentStatus(targetStatus as 'Public' | 'Hidden' | 'Offline');
@@ -64,17 +59,14 @@ export default function SocialPanel() {
 
   const HistoryRef = useRef<HTMLDivElement>(null);
 
-  // 點擊外部關閉聊天室的邏輯
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
-      // 如果聊天室沒開，就不用管它
       if (!isChatRoomOpen) return;
 
       const toggleBtn = document.getElementById('chat-toggle-btn');
 
-      // 確保有抓到聊天室 且點擊的位置不在聊天室內
       const isOutsideChat = HistoryRef.current && !HistoryRef.current.contains(target);
 
       // 確保點擊的位置不在切換按鈕上
@@ -275,4 +267,6 @@ export default function SocialPanel() {
       </div>
     </div>
   );
-}
+});
+
+export default SocialPanel;

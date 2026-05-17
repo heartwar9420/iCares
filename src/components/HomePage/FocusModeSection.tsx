@@ -1,7 +1,7 @@
 import { Headphones, LucideIcon, Sparkles, Timer } from 'lucide-react';
 import { useState } from 'react';
 import { TimerConfigPanelUI, TimerKey } from '../Timer/TimerConfigPanel';
-import type { TimerComboType } from '@/src/hooks/useTimer';
+import type { TimerComboType } from '@/src/stores/useTimerStore';
 
 interface Props {
   Icon: LucideIcon;
