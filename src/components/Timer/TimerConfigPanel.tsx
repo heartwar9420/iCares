@@ -1,5 +1,5 @@
-import { useTimerContext } from '@/src/contexts/TimerContext';
-import type { TimerComboType } from '@/src/hooks/useTimer';
+import { useTimerStore } from '@/src/stores/useTimerStore';
+import type { TimerComboType } from '@/src/stores/useTimerStore';
 import ActionIconButton from '../UI/ActionIconButton';
 import { CircleMinus, CirclePlus, Square, SquareCheck, CircleQuestionMark } from 'lucide-react';
 import { useEffect, useRef } from 'react';
@@ -294,18 +294,16 @@ export const TimerConfigPanelUI = ({
 };
 
 export default function TimerConfigPanel() {
-  const {
-    isTimerConfigOpen,
-    setIsTimerConfigOpen,
-    timerDurationConfigs,
-    setTimerDurationConfigs,
-    timerCombo,
-    setIsReplay,
-    isReplay,
-    applyComboSettings,
-    isDemo,
-    setIsDemo,
-  } = useTimerContext();
+  const isTimerConfigOpen = useTimerStore((s) => s.isTimerConfigOpen);
+  const setIsTimerConfigOpen = useTimerStore((s) => s.setIsTimerConfigOpen);
+  const timerDurationConfigs = useTimerStore((s) => s.timerDurationConfigs);
+  const setTimerDurationConfigs = useTimerStore((s) => s.setTimerDurationConfigs);
+  const timerCombo = useTimerStore((s) => s.timerCombo);
+  const setIsReplay = useTimerStore((s) => s.setIsReplay);
+  const isReplay = useTimerStore((s) => s.isReplay);
+  const applyComboSettings = useTimerStore((s) => s.applyComboSettings);
+  const isDemo = useTimerStore((s) => s.isDemo);
+  const setIsDemo = useTimerStore((s) => s.setIsDemo);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -332,7 +330,7 @@ export default function TimerConfigPanel() {
   if (!isTimerConfigOpen) return null;
 
   const handleUpdateDuration = (key: TimerKey, newValue: number) => {
-    setTimerDurationConfigs((prev) => ({ ...prev, [key]: newValue }));
+    setTimerDurationConfigs({ ...timerDurationConfigs, [key]: newValue });
   };
 
   return (
