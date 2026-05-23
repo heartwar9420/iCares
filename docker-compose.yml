@@ -1,0 +1,29 @@
+services:
+  backend:
+    build: ./api
+    container_name: icares_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app 
+    env_file:
+      - .env.local
+
+  frontend:
+    image: node:20-alpine
+    container_name: icares_frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"  
+    volumes:
+      - .:/app          
+      - /app/node_modules  
+      - /app/.next      
+    env_file:
+      - .env.local 
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    command: sh -c "npm install --no-audit --no-fund && npx next dev -p 3000 -H 0.0.0.0"
+    depends_on:
+      - backend

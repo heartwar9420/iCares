@@ -36,7 +36,6 @@ export default function MusicPlayer() {
     if (isMuted) p.mute();
   };
 
-  // 在 isAutoSync 為 true 時，才允許連動播放
   useEffect(() => {
     if (!player || !isAutoSync) return;
     const timer = setTimeout(() => {
@@ -95,7 +94,6 @@ export default function MusicPlayer() {
   };
 
   const toggleAutoSync = (e?: React.MouseEvent | React.PointerEvent) => {
-    // 安全檢查：如果有傳入 e，才執行阻擋冒泡
     if (e && e.stopPropagation) {
       e.stopPropagation();
     }
@@ -112,13 +110,17 @@ export default function MusicPlayer() {
     >
       <div className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen overflow-hidden">
         <YouTube
-          videoId="jfKfPfyJRdk"
+          videoId="E2vONfzoyRI"
           opts={{
             width: '100%',
             height: '250px',
-            // autoplay = 自動播放 , controls = youtube 控制列
-            // disablekb = 禁用鍵盤快捷鍵 , modestbranding = 隱藏 YouTube Logo
-            playerVars: { autoplay: 0, controls: 0, disablekb: 1, modestbranding: 1 },
+            playerVars: {
+              autoplay: 0,
+              controls: 0,
+              disablekb: 1,
+              modestbranding: 1,
+              origin: typeof window !== 'undefined' ? window.location.origin : '',
+            },
           }}
           onReady={onPlayerReady}
           onPlay={() => setIsPlaying(true)}
@@ -146,9 +148,7 @@ export default function MusicPlayer() {
           </div>
         </div>
 
-        {/* 控制列區塊 */}
         <div className="flex items-center justify-between mt-1">
-          {/* 音量控制區 */}
           <div
             className="flex items-center gap-2 w-full group/volume"
             onClick={(e) => e.stopPropagation()}
